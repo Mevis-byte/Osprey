@@ -88,7 +88,7 @@ export class CommunicationLayer extends BaseLayer {
           color: (isSelected ? LINK_SELECTED_COLOR : LINK_COLOR).withAlpha(isSelected ? 0.95 : 0.55),
           glowPower: isSelected ? 0.2 : 0.12,
         })
-        polyline.width = isSelected ? 2.6 : 1.8
+        polyline.width = new Cesium.ConstantProperty(isSelected ? 2.6 : 1.8)
       }
     }
   }
