@@ -2,21 +2,35 @@ import * as Cesium from 'cesium'
 import type { Asset } from '@/types'
 
 export interface Layer {
+  readonly id: string
+  readonly name: string
+  readonly visible: boolean
+  initialize?(): void
   load(assets: Asset[]): void
   updatePositions(assets: Asset[]): void
   clear(): void
   setVisible(visible: boolean): void
   setHighlight(entityId: string | null): void
+  setSelectedAsset?(asset: Asset | null): void
+  destroy?(): void
 }
 
 export abstract class BaseLayer implements Layer {
   protected viewer: Cesium.Viewer
   protected entities: Cesium.Entity[] = []
-  protected visible = true
+  protected _visible = true
   protected highlightedId: string | null = null
 
-  constructor(viewer: Cesium.Viewer) {
+  constructor(
+    viewer: Cesium.Viewer,
+    public readonly id: string,
+    public readonly name: string,
+  ) {
     this.viewer = viewer
+  }
+
+  get visible(): boolean {
+    return this._visible
   }
 
   abstract load(assets: Asset[]): void
@@ -39,7 +53,7 @@ export abstract class BaseLayer implements Layer {
   }
 
   setVisible(visible: boolean): void {
-    this.visible = visible
+    this._visible = visible
     this.entities.forEach((entity) => {
       entity.show = visible
     })
@@ -80,5 +94,9 @@ export abstract class BaseLayer implements Layer {
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
       scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1, 1.5e8, 0.5),
     })
+  }
+
+  destroy(): void {
+    this.clear()
   }
 }

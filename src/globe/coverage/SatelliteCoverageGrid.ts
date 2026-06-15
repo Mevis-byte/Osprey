@@ -7,6 +7,8 @@ const NUM_SEGMENTS = 60
 const UPDATE_THRESHOLD = 0.02
 const NUM_LINES = 7
 
+const TOTAL_LINES = (NUM_LINES + 1) * 2
+
 export class SatelliteCoverageGrid {
   private viewer: Cesium.Viewer
   private entities: Cesium.Entity[] = []
@@ -18,20 +20,48 @@ export class SatelliteCoverageGrid {
 
   constructor(viewer: Cesium.Viewer) {
     this.viewer = viewer
+    this.createEntities()
+  }
+
+  private createEntities(): void {
+    for (let i = 0; i < TOTAL_LINES; i++) {
+      const entity = this.viewer.entities.add({
+        polyline: {
+          positions: [],
+          width: 1,
+          material: new Cesium.ColorMaterialProperty(GRID_COLOR),
+        },
+        show: false,
+      })
+      this.entities.push(entity)
+    }
   }
 
   show(satelliteId: string): void {
-    this.hide()
     this.satelliteId = satelliteId
     this.lastLat = null
     this.lastLon = null
-    this.createGrid()
-    if (this.entities.length > 0) {
-      this.removeListener = this.viewer.scene.preRender.addEventListener(() => {
-        this.tick()
-      })
-      this.viewer.scene.requestRender()
+    this.updateCoverage(satelliteId)
+    this.removeListener = this.viewer.scene.preRender.addEventListener(() => {
+      this.tick()
+    })
+    this.viewer.scene.requestRender()
+  }
+
+  private updateCoverage(satelliteId: string): void {
+    const state = useAppStore.getState()
+    const asset = state.assetData.find((a) => a.id === satelliteId)
+    if (!asset || asset.altitude <= 0) return
+
+    const altitude = asset.altitude
+    const coverageAngle = Math.acos(EARTH_RADIUS / (EARTH_RADIUS + altitude))
+    this.coverageAngleDeg = Cesium.Math.toDegrees(coverageAngle)
+
+    for (const entity of this.entities) {
+      entity.show = true
     }
+
+    this.updatePositions(asset.latitude, asset.longitude)
   }
 
   hide(): void {
@@ -40,9 +70,8 @@ export class SatelliteCoverageGrid {
       this.removeListener = null
     }
     for (const entity of this.entities) {
-      this.viewer.entities.remove(entity)
+      entity.show = false
     }
-    this.entities = []
     this.satelliteId = null
     this.lastLat = null
     this.lastLon = null
@@ -50,32 +79,10 @@ export class SatelliteCoverageGrid {
 
   destroy(): void {
     this.hide()
-  }
-
-  private createGrid(): void {
-    if (!this.satelliteId) return
-    const state = useAppStore.getState()
-    const asset = state.assetData.find((a) => a.id === this.satelliteId)
-    if (!asset || asset.altitude <= 0) return
-
-    const altitude = asset.altitude
-    const coverageAngle = Math.acos(EARTH_RADIUS / (EARTH_RADIUS + altitude))
-    this.coverageAngleDeg = Cesium.Math.toDegrees(coverageAngle)
-
-    const totalLines = (NUM_LINES + 1) * 2
-
-    for (let i = 0; i < totalLines; i++) {
-      const entity = this.viewer.entities.add({
-        polyline: {
-          positions: [],
-          width: 1,
-          material: new Cesium.ColorMaterialProperty(GRID_COLOR),
-        },
-      })
-      this.entities.push(entity)
+    for (const entity of this.entities) {
+      this.viewer.entities.remove(entity)
     }
-
-    this.updatePositions(asset.latitude, asset.longitude)
+    this.entities = []
   }
 
   private tick(): void {

@@ -9,6 +9,10 @@ function isSatellite(asset: Asset): asset is Satellite {
 const SATELLITE_COLOR = Cesium.Color.fromCssColorString('#fbbf24')
 
 export class SatelliteLayer extends BaseLayer {
+  constructor(viewer: Cesium.Viewer) {
+    super(viewer, 'satellite', 'Satellite')
+  }
+
   load(assets: Asset[]): void {
     this.clear()
 

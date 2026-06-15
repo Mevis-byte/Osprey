@@ -9,6 +9,10 @@ function isAircraft(asset: Asset): asset is Aircraft {
 const AIRCRAFT_COLOR = Cesium.Color.fromCssColorString('#22d3ee')
 
 export class AircraftLayer extends BaseLayer {
+  constructor(viewer: Cesium.Viewer) {
+    super(viewer, 'aircraft', 'Aircraft')
+  }
+
   load(assets: Asset[]): void {
     this.clear()
 

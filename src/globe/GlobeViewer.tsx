@@ -3,7 +3,7 @@ import * as Cesium from 'cesium'
 import { motion, AnimatePresence } from 'framer-motion'
 import { allAssets, missions } from '@/mock-data'
 import { useAppStore } from '@/store'
-import { AircraftLayer, MaritimeLayer, SatelliteLayer } from './layers'
+import { AircraftLayer, MaritimeLayer, SatelliteLayer, SensorConeLayer, ConstellationLayer, TrajectoryLayer, RegionOverlayLayer, EventMarkerLayer } from './layers'
 import { TrailRenderer, assetTypeColor } from './trails/TrailRenderer'
 import { HeatmapManager } from './heatmap'
 import { SatelliteTooltip } from './tooltip/SatelliteTooltip'
@@ -80,6 +80,9 @@ function GlobeViewer() {
   const setTrackingAssetId = useAppStore((s) => s.setTrackingAssetId)
   const focusRequestId = useAppStore((s) => s.focusRequestId)
   const requestFocus = useAppStore((s) => s.requestFocus)
+  const selectedConstellationId = useAppStore((s) => s.selectedConstellationId)
+  const setSelectedConstellationId = useAppStore((s) => s.setSelectedConstellationId)
+  const constellations = useAppStore((s) => s.constellations)
 
   const flyToAsset = useCallback((asset: Asset, onComplete?: () => void) => {
     const viewer = viewerRef.current
@@ -161,7 +164,14 @@ function GlobeViewer() {
       new AircraftLayer(viewer),
       new MaritimeLayer(viewer),
       new SatelliteLayer(viewer),
+      new SensorConeLayer(viewer),
+      new ConstellationLayer(viewer),
+      new TrajectoryLayer(viewer),
+      new RegionOverlayLayer(viewer),
+      new EventMarkerLayer(viewer),
     ]
+
+    const evLayer = layers[layers.length - 1] as EventMarkerLayer
 
     layers.forEach((layer) => layer.load(allAssets))
     layersRef.current = layers
@@ -218,16 +228,37 @@ function GlobeViewer() {
       if (asset) {
         selectedIdRef.current = entityId
         layers.forEach((l) => l.setHighlight(entityId))
+        layers.forEach((l) => l.setSelectedAsset?.(asset))
         setSelectedAsset(asset)
+        setSelectedConstellationId(null)
         setTrackingAssetId(null)
         flyToAsset(asset, () => {
           setTrackingAssetId(asset.id)
         })
         setTooltip((prev) => ({ ...prev, visible: false }))
+      } else if (entityId && (entityId.startsWith('event-') || entityId.startsWith('alert-'))) {
+        const targetAssetId = evLayer.getAssetIdForEntity(entityId)
+        if (targetAssetId) {
+          const targetAsset = assetMap.get(targetAssetId)
+          if (targetAsset) {
+            selectedIdRef.current = targetAssetId
+            layers.forEach((l) => l.setHighlight(targetAssetId))
+            layers.forEach((l) => l.setSelectedAsset?.(targetAsset))
+            setSelectedAsset(targetAsset)
+            setSelectedConstellationId(null)
+            setTrackingAssetId(null)
+            flyToAsset(targetAsset, () => {
+              setTrackingAssetId(targetAsset.id)
+            })
+            setTooltip((prev) => ({ ...prev, visible: false }))
+          }
+        }
       } else if (selectedIdRef.current !== null) {
         selectedIdRef.current = null
         layers.forEach((l) => l.setHighlight(null))
+        layers.forEach((l) => l.setSelectedAsset?.(null))
         setSelectedAsset(null)
+        setSelectedConstellationId(null)
         setTrackingAssetId(null)
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
@@ -407,6 +438,49 @@ function GlobeViewer() {
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden" style={{ background: '#0a0c12' }}>
+      <div className="absolute left-4 top-4 z-40 w-56 space-y-1">
+        <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Constellations</div>
+        {constellations.map((c) => {
+          const isSelected = selectedConstellationId === c.id
+          return (
+            <button
+              key={c.id}
+              onClick={() => {
+                if (isSelected) {
+                  setSelectedConstellationId(null)
+                } else {
+                  setSelectedConstellationId(c.id)
+                  setSelectedAsset(null)
+                  setTrackingAssetId(null)
+                  selectedIdRef.current = null
+                  layersRef.current.forEach((l) => l.setHighlight(null))
+                }
+              }}
+              className={`w-full rounded border px-3 py-2 text-left text-[11px] transition-all ${
+                isSelected
+                  ? 'border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_12px_rgba(34,211,238,0.08)]'
+                  : 'border-border/40 bg-[#0d1117]/60 hover:border-border/70'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
+                  <span className="font-medium text-foreground/80">{c.name}</span>
+                </div>
+                <span className={`rounded px-1 py-0.5 text-[8px] uppercase ${
+                  c.healthStatus === 'healthy' ? 'bg-green-500/15 text-green-400' :
+                  c.healthStatus === 'degraded' ? 'bg-yellow-500/15 text-yellow-400' :
+                  'bg-red-500/15 text-red-400'
+                }`}>{c.healthStatus}</span>
+              </div>
+              <div className="mt-1 flex justify-between text-[9px] text-muted-foreground/50">
+                <span>{c.satelliteIds.length} satellites</span>
+                <span>{c.coverageRadius} km</span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
       <AnimatePresence>
         {tooltip.visible && tooltip.asset && tooltip.asset.type === 'satellite' && (
           <SatelliteTooltip

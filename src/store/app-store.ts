@@ -1,7 +1,11 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { Asset, Alert, FeedEvent, Mission } from '@/types'
+import type { Asset, Alert, FeedEvent, GroundStation, Mission, ConstellationInfo, Region } from '@/types'
 import type { AssetType, AssetStatus, ThreatLevel } from '@/types'
+import { constellations as constData } from '@/mock-data'
+import { regions as regionData } from '@/mock-data'
+
+const MAX_STORE_ENTRIES = 200
 
 const ALL_ASSET_TYPES: AssetType[] = ['fixed-wing', 'rotary-wing', 'maritime', 'satellite', 'ground-vehicle', 'stationary']
 const ALL_ASSET_STATUSES: AssetStatus[] = ['active', 'standby', 'offline', 'maintenance', 'unknown', 'lost']
@@ -32,7 +36,11 @@ function generateId(): string {
 
 export interface AppStore {
   selectedAsset: Asset | null
+  selectedGroundStation: GroundStation | null
   selectedMission: Mission | null
+  selectedConstellationId: string | null
+  constellations: ConstellationInfo[]
+  regions: Region[]
   activeFilters: Filters
   feedData: FeedEvent[]
   assetData: Asset[]
@@ -49,7 +57,11 @@ export interface AppStore {
   focusRequestId: string | null
 
   setSelectedAsset: (asset: Asset | null) => void
+  setSelectedGroundStation: (station: GroundStation | null) => void
   setSelectedMission: (mission: Mission | null) => void
+  setSelectedConstellationId: (id: string | null) => void
+  setConstellations: (data: ConstellationInfo[]) => void
+  setRegions: (data: Region[]) => void
   setFeedData: (data: FeedEvent[]) => void
   setAssetData: (data: Asset[]) => void
   setTimelinePosition: (position: number) => void
@@ -75,7 +87,11 @@ export const useAppStore = create<AppStore>()(
   devtools(
     (set, get) => ({
       selectedAsset: null,
+      selectedGroundStation: null,
       selectedMission: null,
+      selectedConstellationId: null,
+      constellations: constData,
+      regions: regionData,
       activeFilters: {
         assetTypes: initFilterRecord(ALL_ASSET_TYPES),
         assetStatuses: initFilterRecord(ALL_ASSET_STATUSES),
@@ -98,7 +114,12 @@ export const useAppStore = create<AppStore>()(
 
       setSelectedAsset: (asset) => set({ selectedAsset: asset }),
 
+      setSelectedGroundStation: (station) => set({ selectedGroundStation: station }),
+
       setSelectedMission: (mission) => set({ selectedMission: mission }),
+      setSelectedConstellationId: (id) => set({ selectedConstellationId: id }),
+      setConstellations: (data) => set({ constellations: data }),
+      setRegions: (data) => set({ regions: data }),
 
       setFeedData: (data) => set({ feedData: data }),
 
@@ -151,7 +172,9 @@ export const useAppStore = create<AppStore>()(
           id: generateId(),
           timestamp: new Date().toISOString(),
         }
-        set({ alerts: [...get().alerts, alert] })
+        const alerts = [...get().alerts, alert]
+        if (alerts.length > MAX_STORE_ENTRIES) alerts.splice(0, alerts.length - MAX_STORE_ENTRIES)
+        set({ alerts })
       },
 
       addFeedEvent: (partial) => {
@@ -159,7 +182,9 @@ export const useAppStore = create<AppStore>()(
           ...partial,
           id: generateId(),
         }
-        set({ feedData: [...get().feedData, event] })
+        const feedData = [...get().feedData, event]
+        if (feedData.length > MAX_STORE_ENTRIES) feedData.splice(0, feedData.length - MAX_STORE_ENTRIES)
+        set({ feedData })
       },
 
       removeAlert: (id) =>

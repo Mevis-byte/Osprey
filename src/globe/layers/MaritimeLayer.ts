@@ -9,6 +9,10 @@ function isMaritime(asset: Asset): asset is MaritimeAsset {
 const MARITIME_COLOR = Cesium.Color.fromCssColorString('#4ade80')
 
 export class MaritimeLayer extends BaseLayer {
+  constructor(viewer: Cesium.Viewer) {
+    super(viewer, 'maritime', 'Maritime')
+  }
+
   load(assets: Asset[]): void {
     this.clear()
 

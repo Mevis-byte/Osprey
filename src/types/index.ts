@@ -78,6 +78,30 @@ export interface Satellite extends AssetBase {
 
 export type Asset = Aircraft | MaritimeAsset | Satellite
 
+export type GroundStationStatus = 'active' | 'standby' | 'maintenance' | 'offline'
+
+export interface GroundStation {
+  id: string
+  name: string
+  type: 'ground-station'
+  latitude: number
+  longitude: number
+  altitude: number
+  status: GroundStationStatus
+  lastUpdated: string
+  coverageRadiusKm: number
+  connectedSatelliteIds: string[]
+  country: string
+  operator: string
+}
+
+export interface GroundStationLink {
+  id: string
+  groundStationId: string
+  satelliteId: string
+  active: boolean
+}
+
 export interface TelemetryData {
   id: string
   assetId: string
@@ -137,9 +161,21 @@ export interface Region {
   threatLevel: ThreatLevel
   activeMissions: string[]
   assetCount: number
+  alertCount: number
 }
 
 export type GlobeViewMode = '3D' | '2D' | 'Columbus'
+
+export interface ConstellationInfo {
+  id: string
+  name: string
+  type: 'leo' | 'meo' | 'geo' | 'heo'
+  satelliteIds: string[]
+  color: string
+  coverageRadius: number
+  healthStatus: 'healthy' | 'degraded' | 'critical'
+  operator: string
+}
 
 export interface GlobeState {
   center: Coordinates

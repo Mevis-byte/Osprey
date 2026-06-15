@@ -7,4 +7,6 @@ export { maritime }
 export { satellites }
 export { feed } from './feed'
 export { missions } from './missions'
+export { constellations } from './constellations'
+export { regions } from './regions'
 export const allAssets = [...aircraft, ...maritime, ...satellites]

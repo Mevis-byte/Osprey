@@ -4,9 +4,9 @@ const LINE_SPACING_DEG = 10
 const LABEL_SPACING_DEG = 30
 const MAJOR_SPACING_DEG = 30
 
-const LINE_BASE_ALPHA = 0.15
-const MAJOR_LINE_ALPHA = 0.22
-const LABEL_ALPHA = 0.50
+const LINE_BASE_ALPHA = 0.35
+const MAJOR_LINE_ALPHA = 0.45
+const LABEL_ALPHA = 0.70
 
 const FADE_ALT_MAX = 300000
 const FADE_ALT_MIN = 50000
@@ -78,7 +78,7 @@ export class TacticalGridOverlay {
       const entity = this.viewer.entities.add({
         polyline: {
           positions,
-          width: isMajor ? 1 : 0.5,
+          width: isMajor ? 1.5 : 1,
           material: new Cesium.ColorMaterialProperty(
             Cesium.Color.LIMEGREEN.withAlpha(alpha),
           ),
@@ -103,7 +103,7 @@ export class TacticalGridOverlay {
       const entity = this.viewer.entities.add({
         polyline: {
           positions,
-          width: isMajor ? 1 : 0.5,
+          width: isMajor ? 1.5 : 1,
           material: new Cesium.ColorMaterialProperty(
             Cesium.Color.LIMEGREEN.withAlpha(alpha),
           ),
