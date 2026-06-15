@@ -30,6 +30,9 @@ export class MaritimeLayer extends BaseLayer {
         name: asset.name,
         position,
         point: this.createPoint(MARITIME_COLOR),
+        label: this.createLabel(asset.name, {
+          fillColor: MARITIME_COLOR,
+        }),
         properties: {
           type: asset.type,
           mmsi: asset.mmsi,

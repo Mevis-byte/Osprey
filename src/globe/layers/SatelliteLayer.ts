@@ -30,6 +30,9 @@ export class SatelliteLayer extends BaseLayer {
         name: asset.name,
         position,
         point: this.createPoint(SATELLITE_COLOR),
+        label: this.createLabel(asset.name, {
+          fillColor: SATELLITE_COLOR,
+        }),
         properties: {
           type: asset.type,
           noradId: asset.noradId,

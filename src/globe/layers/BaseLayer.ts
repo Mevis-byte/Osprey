@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium'
 import type { Asset } from '@/types'
+import { createLabelGraphics } from './label-styles'
 
 export interface Layer {
   readonly id: string
@@ -70,6 +71,9 @@ export abstract class BaseLayer implements Layer {
         p.outlineWidth = 1.5
         p.outlineColor = Cesium.Color.WHITE
       }
+      if (prev?.label) {
+        prev.label.showBackground = new Cesium.ConstantProperty(false)
+      }
     }
 
     this.highlightedId = entityId
@@ -82,6 +86,9 @@ export abstract class BaseLayer implements Layer {
         p.outlineWidth = 3
         p.outlineColor = Cesium.Color.fromCssColorString('#60a5fa')
       }
+      if (next?.label) {
+        next.label.showBackground = new Cesium.ConstantProperty(true)
+      }
     }
   }
 
@@ -93,6 +100,13 @@ export abstract class BaseLayer implements Layer {
       outlineWidth: 1.5,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
       scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1, 1.5e8, 0.5),
+    })
+  }
+
+  protected createLabel(text: string | Cesium.Property, options: Partial<Parameters<typeof createLabelGraphics>[0]> = {}): Cesium.LabelGraphics {
+    return createLabelGraphics({
+      text,
+      ...options
     })
   }
 

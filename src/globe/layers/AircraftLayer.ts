@@ -30,6 +30,9 @@ export class AircraftLayer extends BaseLayer {
         name: asset.name,
         position,
         point: this.createPoint(AIRCRAFT_COLOR),
+        label: this.createLabel(asset.name, {
+          fillColor: AIRCRAFT_COLOR,
+        }),
         properties: {
           type: asset.type,
           callsign: asset.callsign,

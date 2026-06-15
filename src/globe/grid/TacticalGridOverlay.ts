@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium'
+import { createLabelGraphics } from '../layers/label-styles'
 
 const LINE_SPACING_DEG = 10
 const LABEL_SPACING_DEG = 30
@@ -127,18 +128,13 @@ export class TacticalGridOverlay {
 
         const entity = this.viewer.entities.add({
           position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
-          label: {
+          label: createLabelGraphics({
             text: `${colLetter}${rowLetter}`,
-            font: '9px monospace',
             fillColor: Cesium.Color.LIMEGREEN.withAlpha(LABEL_ALPHA),
-            outlineColor: Cesium.Color.BLACK,
-            outlineWidth: 1,
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            showBackground: false,
             horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
             verticalOrigin: Cesium.VerticalOrigin.CENTER,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
+            pixelOffset: new Cesium.Cartesian2(0, 0),
+          }),
         })
         this.entities.push(entity)
         this.entityAlphas.push(LABEL_ALPHA)

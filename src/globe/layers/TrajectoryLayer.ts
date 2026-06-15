@@ -74,18 +74,12 @@ export class TrajectoryLayer extends BaseLayer {
           outlineWidth: 1,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
-        label: {
-          text: `+${PREDICTION_MARKS[i]}m`,
-          font: '9px monospace',
+        label: this.createLabel(`+${PREDICTION_MARKS[i]}m`, {
           fillColor: SEGMENT_COLORS[i],
-          outlineColor: Cesium.Color.BLACK,
-          outlineWidth: 1,
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -4),
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        },
+          pixelOffset: new Cesium.Cartesian2(0, -8),
+        }),
         show: false,
       })
       this.waypointEntities.push(waypoint)

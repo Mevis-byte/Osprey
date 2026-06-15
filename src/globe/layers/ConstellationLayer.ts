@@ -103,6 +103,12 @@ export class ConstellationLayer extends BaseLayer {
             )
             return c ?? Cesium.Cartesian3.ZERO
           }, false),
+          label: this.createLabel(info.name, {
+            fillColor: color,
+            horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+            verticalOrigin: Cesium.VerticalOrigin.CENTER,
+            pixelOffset: new Cesium.Cartesian2(0, 0),
+          }),
           ellipse: {
             semiMinorAxis: radius,
             semiMajorAxis: radius,

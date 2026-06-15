@@ -137,21 +137,12 @@ export class EventMarkerLayer extends BaseLayer {
 
     const label = this.viewer.entities.add({
       position: pos,
-      label: {
-        text: title,
-        font: '10px monospace',
+      label: this.createLabel(title, {
         fillColor: color,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
-        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
-        pixelOffset: new Cesium.Cartesian2(10, 0),
-        showBackground: true,
-        backgroundColor: Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.7),
-        backgroundPadding: new Cesium.Cartesian2(6, 4),
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      },
+        pixelOffset: new Cesium.Cartesian2(12, 0),
+      }),
     })
 
     const ring = this.viewer.entities.add({
@@ -188,9 +179,10 @@ export class EventMarkerLayer extends BaseLayer {
       const ease = 1 - (1 - t) ** 2
       m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 10)
       m.label.label!.showBackground = new Cesium.ConstantProperty(true)
-      const bg = Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.7 * ease)
+      const bg = Cesium.Color.fromCssColorString('#0f172a').withAlpha(0.7 * ease)
       m.label.label!.backgroundColor = bg as unknown as Cesium.Property
-    } else if (remaining < FADE_OUT_MS) {
+    }
+ else if (remaining < FADE_OUT_MS) {
       const t = remaining / FADE_OUT_MS
       const ease = t * t
       m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 10)

@@ -73,22 +73,10 @@ export class RegionOverlayLayer extends BaseLayer {
 
     const label = this.viewer.entities.add({
       position: centerPos,
-      label: {
-        text: this.buildLabelText(r),
-        font: '11px monospace',
-        fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
-        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      label: this.createLabel(this.buildLabelText(r), {
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
-        showBackground: true,
-        backgroundColor: Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.7),
-        backgroundPadding: new Cesium.Cartesian2(8, 6),
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        scaleByDistance: new Cesium.NearFarScalar(5e6, 0, 5e7, 1.5),
-        translucencyByDistance: new Cesium.NearFarScalar(2e6, 0, 4e6, 1),
-      },
+      }),
     })
     this.regionLabels.push(label)
   }
