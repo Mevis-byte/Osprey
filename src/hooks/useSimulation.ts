@@ -12,26 +12,30 @@ export function useSimulation(): void {
   useEffect(() => {
     const state = useAppStore.getState()
     const manager = getSimulationManager()
-
-    if (state.assetData.length === 0) {
-      state.setAssetData(allAssets)
-    }
-
-    if (state.feedData.length === 0) {
-      state.setFeedData(feed)
-    }
-
-    manager.initialize(allAssets, state.timelinePosition, {
-      setAssetData: state.setAssetData,
-      setTimelinePosition: state.setTimelinePosition,
-    })
-
     const alertMgr = getAlertManager()
-    alertMgr.initialize(allAssets)
 
-    if (state.isPlaying) {
-      manager.start()
+    const init = async () => {
+      if (state.assetData.length === 0) {
+        state.setAssetData(allAssets)
+      }
+
+      if (state.feedData.length === 0) {
+        state.setFeedData(feed)
+      }
+
+      await manager.initialize(allAssets, state.timelinePosition, {
+        setAssetData: state.setAssetData,
+        setTimelinePosition: state.setTimelinePosition,
+      })
+
+      alertMgr.initialize(allAssets)
+
+      if (state.isPlaying) {
+        manager.start()
+      }
     }
+
+    init()
 
     return () => {
       manager.stop()

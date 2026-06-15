@@ -2,6 +2,24 @@ import type { Satellite } from '@/types'
 
 export const satellites: Satellite[] = [
   {
+    id: 'SAT-ISS',
+    name: 'ISS (ZARYA)',
+    type: 'satellite',
+    latitude: 0,
+    longitude: 0,
+    altitude: 420000,
+    speed: 7660,
+    heading: 0,
+    status: 'active',
+    lastUpdated: new Date().toISOString(),
+    noradId: '25544',
+    inclination: 51.64,
+    apogee: 422000,
+    perigee: 418000,
+    period: 92.9,
+    launchDate: '1998-11-20',
+  },
+  {
     id: 'SV-001',
     name: 'USA-324 (KH-11)',
     type: 'satellite',
@@ -92,17 +110,17 @@ export const satellites: Satellite[] = [
     launchDate: '2021-05-17',
   },
 
-  { id: 'SAT-SL-1', name: 'Starlink-1001', type: 'satellite', latitude: 35.2, longitude: -120.4, altitude: 550000, speed: 27360, heading: 180, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '60001', inclination: 53.0, apogee: 555000, perigee: 545000, period: 95.6, launchDate: '2025-01-10' },
-  { id: 'SAT-SL-2', name: 'Starlink-1002', type: 'satellite', latitude: -15.8, longitude: -80.2, altitude: 550000, speed: 27360, heading: 180, status: 'active', lastUpdated: '2026-06-15T08:22:30Z', noradId: '60002', inclination: 53.0, apogee: 555000, perigee: 545000, period: 95.6, launchDate: '2025-01-10' },
+  { id: 'SAT-SL-1', name: 'Starlink-1001', type: 'satellite', latitude: 35.2, longitude: -120.4, altitude: 550000, speed: 27360, heading: 180, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '44713', inclination: 53.0, apogee: 555000, perigee: 545000, period: 95.6, launchDate: '2019-11-11' },
+  { id: 'SAT-SL-2', name: 'Starlink-1002', type: 'satellite', latitude: -15.8, longitude: -80.2, altitude: 550000, speed: 27360, heading: 180, status: 'active', lastUpdated: '2026-06-15T08:22:30Z', noradId: '44714', inclination: 53.0, apogee: 555000, perigee: 545000, period: 95.6, launchDate: '2019-11-11' },
   { id: 'SAT-SL-3', name: 'Starlink-1003', type: 'satellite', latitude: 52.1, longitude: 10.5, altitude: 550000, speed: 27360, heading: 180, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '60003', inclination: 53.0, apogee: 555000, perigee: 545000, period: 95.6, launchDate: '2025-01-10' },
   { id: 'SAT-SL-4', name: 'Starlink-1004', type: 'satellite', latitude: -30.5, longitude: 150.3, altitude: 550000, speed: 27360, heading: 180, status: 'active', lastUpdated: '2026-06-15T08:22:00Z', noradId: '60004', inclination: 53.0, apogee: 555000, perigee: 545000, period: 95.6, launchDate: '2025-01-10' },
   { id: 'SAT-SL-5', name: 'Starlink-1005', type: 'satellite', latitude: 45.0, longitude: -45.0, altitude: 550000, speed: 27360, heading: 180, status: 'active', lastUpdated: '2026-06-15T08:23:30Z', noradId: '60005', inclination: 53.0, apogee: 555000, perigee: 545000, period: 95.6, launchDate: '2025-01-10' },
 
-  { id: 'SAT-GPS-1', name: 'GPS-IIF-1', type: 'satellite', latitude: 25.0, longitude: -110.0, altitude: 20200000, speed: 13900, heading: 90, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '61001', inclination: 55.0, apogee: 20300000, perigee: 20100000, period: 718.0, launchDate: '2022-06-15' },
+  { id: 'SAT-GPS-1', name: 'GPS-IIF-1', type: 'satellite', latitude: 25.0, longitude: -110.0, altitude: 20200000, speed: 13900, heading: 90, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '24876', inclination: 55.0, apogee: 20300000, perigee: 20100000, period: 718.0, launchDate: '1997-07-23' },
   { id: 'SAT-GPS-2', name: 'GPS-IIF-2', type: 'satellite', latitude: 10.0, longitude: 30.0, altitude: 20200000, speed: 13900, heading: 90, status: 'active', lastUpdated: '2026-06-15T08:22:30Z', noradId: '61002', inclination: 55.0, apogee: 20300000, perigee: 20100000, period: 718.0, launchDate: '2022-08-20' },
   { id: 'SAT-GPS-3', name: 'GPS-IIF-3', type: 'satellite', latitude: -20.0, longitude: 160.0, altitude: 20200000, speed: 13900, heading: 90, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '61003', inclination: 55.0, apogee: 20300000, perigee: 20100000, period: 718.0, launchDate: '2023-01-05' },
 
-  { id: 'SAT-GAL-1', name: 'Galileo-FOC-1', type: 'satellite', latitude: 48.5, longitude: 2.3, altitude: 23222000, speed: 13200, heading: 270, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '62001', inclination: 56.0, apogee: 23300000, perigee: 23100000, period: 844.0, launchDate: '2023-04-12' },
+  { id: 'SAT-GAL-1', name: 'Galileo-FOC-1', type: 'satellite', latitude: 48.5, longitude: 2.3, altitude: 23222000, speed: 13200, heading: 270, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '37846', inclination: 56.0, apogee: 23300000, perigee: 23100000, period: 844.0, launchDate: '2011-10-21' },
   { id: 'SAT-GAL-2', name: 'Galileo-FOC-2', type: 'satellite', latitude: -35.0, longitude: -70.0, altitude: 23222000, speed: 13200, heading: 270, status: 'active', lastUpdated: '2026-06-15T08:22:00Z', noradId: '62002', inclination: 56.0, apogee: 23300000, perigee: 23100000, period: 844.0, launchDate: '2023-07-20' },
   { id: 'SAT-GAL-3', name: 'Galileo-FOC-3', type: 'satellite', latitude: 15.0, longitude: 120.0, altitude: 23222000, speed: 13200, heading: 270, status: 'active', lastUpdated: '2026-06-15T08:23:30Z', noradId: '62003', inclination: 56.0, apogee: 23300000, perigee: 23100000, period: 844.0, launchDate: '2024-02-10' },
 

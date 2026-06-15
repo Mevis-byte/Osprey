@@ -7,6 +7,7 @@ import { SatelliteEntity } from './SatelliteEntity'
 import { HistoryTracker } from './HistoryTracker'
 import type { HistoryPoint } from './HistoryTracker'
 import { aircraftRoutes, maritimeRoutes } from './routes'
+import { CelesTrakService } from '../CelesTrakService'
 
 export interface PositionData {
   latitude: number
@@ -36,9 +37,12 @@ export class SimulationManager {
   private positions: Map<string, PositionData> = new Map()
   private history: Map<string, HistoryTracker> = new Map()
 
-  initialize(assets: Asset[], timelinePosition: number, updaters: StoreUpdaters): void {
+  async initialize(assets: Asset[], timelinePosition: number, updaters: StoreUpdaters): Promise<void> {
     this.storeUpdaters = updaters
     this.timelinePosition = timelinePosition
+
+    // Fetch TLE data before initializing satellites
+    await CelesTrakService.getInstance().fetchAll()
 
     this.originalAssets.clear()
     for (const asset of assets) {
@@ -62,7 +66,9 @@ export class SimulationManager {
         ]
         this.entities.push(new MaritimeEntity(asset, waypoints))
       } else if (SatelliteEntity.isSatellite(asset)) {
-        this.satellites.push(new SatelliteEntity(asset))
+        const sat = new SatelliteEntity(asset)
+        sat.update(0, this.timelinePosition)
+        this.satellites.push(sat)
       }
     }
 
@@ -163,7 +169,7 @@ export class SimulationManager {
     }
 
     for (const sat of this.satellites) {
-      sat.update(dt)
+      sat.update(dt, this.timelinePosition)
       this.positions.set(sat.id, {
         latitude: sat.latitude,
         longitude: sat.longitude,
