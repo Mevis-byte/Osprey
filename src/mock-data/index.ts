@@ -6,5 +6,5 @@ export { aircraft }
 export { maritime }
 export { satellites }
 export { feed } from './feed'
-
+export { missions } from './missions'
 export const allAssets = [...aircraft, ...maritime, ...satellites]

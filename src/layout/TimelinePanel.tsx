@@ -1,6 +1,7 @@
-import { useMemo, useState, useCallback } from 'react'
-import { Play, Pause } from 'lucide-react'
+import { useMemo, useCallback, useState, useRef, useEffect } from 'react'
+import { Play, Pause, Route, Layers, Radio, Grid3x3 } from 'lucide-react'
 import { useAppStore } from '@/store'
+import type { HeatmapLayerKey } from '@/store'
 
 const SPEEDS = [1, 2, 4, 10] as const
 
@@ -26,13 +27,42 @@ function formatPosition(ms: number): string {
   return `${month}/${day} ${hours}:${minutes}Z`
 }
 
+const HEATMAP_ITEMS: { key: HeatmapLayerKey; label: string }[] = [
+  { key: 'assetDensity', label: 'Asset Density' },
+  { key: 'alertDensity', label: 'Alert Density' },
+  { key: 'missionActivity', label: 'Mission Activity' },
+]
+
 function TimelinePanel() {
   const timelinePosition = useAppStore((s) => s.timelinePosition)
   const simulationSpeed = useAppStore((s) => s.simulationSpeed)
+  const isPlaying = useAppStore((s) => s.isPlaying)
+  const trailsVisible = useAppStore((s) => s.trailsVisible)
+  const sensorConeVisible = useAppStore((s) => s.sensorConeVisible)
+  const gridOverlayVisible = useAppStore((s) => s.gridOverlayVisible)
+  const heatmapLayers = useAppStore((s) => s.heatmapLayers)
   const setTimelinePosition = useAppStore((s) => s.setTimelinePosition)
   const setSimulationSpeed = useAppStore((s) => s.setSimulationSpeed)
+  const setPlaying = useAppStore((s) => s.setPlaying)
+  const setTrailsVisible = useAppStore((s) => s.setTrailsVisible)
+  const toggleSensorCone = useAppStore((s) => s.toggleSensorCone)
+  const toggleGridOverlay = useAppStore((s) => s.toggleGridOverlay)
+  const toggleHeatmapLayer = useAppStore((s) => s.toggleHeatmapLayer)
 
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [heatmapOpen, setHeatmapOpen] = useState(false)
+  const heatmapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!heatmapOpen) return
+    function handleClick(e: MouseEvent) {
+      if (heatmapRef.current && !heatmapRef.current.contains(e.target as Node)) {
+        setHeatmapOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [heatmapOpen])
+
   const range = useTimeRange()
 
   const clampedPosition = Math.max(range.start, Math.min(range.end, timelinePosition))
@@ -47,8 +77,10 @@ function TimelinePanel() {
   )
 
   const togglePlay = useCallback(() => {
-    setIsPlaying((prev) => !prev)
-  }, [])
+    setPlaying(!isPlaying)
+  }, [isPlaying, setPlaying])
+
+  const anyHeatmapVisible = Object.values(heatmapLayers).some(Boolean)
 
   return (
     <footer className="flex items-center gap-2.5 border-t border-border bg-card px-3" style={{ height: 32 }}>
@@ -79,6 +111,82 @@ function TimelinePanel() {
             </button>
           )
         })}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setTrailsVisible(!trailsVisible)}
+        className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
+          trailsVisible
+            ? 'border-primary/20 bg-primary/10 text-primary'
+            : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
+        }`}
+        aria-label={trailsVisible ? 'Hide trails' : 'Show trails'}
+      >
+        <Route className="h-2.5 w-2.5" />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => toggleSensorCone()}
+        className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
+          sensorConeVisible
+            ? 'border-primary/20 bg-primary/10 text-primary'
+            : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
+        }`}
+        aria-label={sensorConeVisible ? 'Hide sensor cone' : 'Show sensor cone'}
+      >
+        <Radio className="h-2.5 w-2.5" />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => toggleGridOverlay()}
+        className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
+          gridOverlayVisible
+            ? 'border-primary/20 bg-primary/10 text-primary'
+            : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
+        }`}
+        aria-label={gridOverlayVisible ? 'Hide tactical grid' : 'Show tactical grid'}
+      >
+        <Grid3x3 className="h-2.5 w-2.5" />
+      </button>
+
+      <div ref={heatmapRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setHeatmapOpen(!heatmapOpen)}
+          className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
+            anyHeatmapVisible
+              ? 'border-primary/20 bg-primary/10 text-primary'
+              : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
+          }`}
+          aria-label="Heatmap layers"
+        >
+          <Layers className="h-2.5 w-2.5" />
+        </button>
+        {heatmapOpen && (
+          <div className="absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 rounded-[2px] border border-border/60 bg-card py-1 shadow-lg">
+            {HEATMAP_ITEMS.map(({ key, label }) => {
+              const active = heatmapLayers[key]
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleHeatmapLayer(key)}
+                  className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-1 text-[10px] transition-colors hover:bg-accent/30 ${
+                    active ? 'text-primary' : 'text-muted-foreground/70'
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-[2px] ${active ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+                  />
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <span className="h-4 w-px bg-border/60" />

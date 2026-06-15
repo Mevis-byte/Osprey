@@ -3,6 +3,7 @@ import type { Asset } from '@/types'
 
 export interface Layer {
   load(assets: Asset[]): void
+  updatePositions(assets: Asset[]): void
   clear(): void
   setVisible(visible: boolean): void
   setHighlight(entityId: string | null): void
@@ -19,6 +20,18 @@ export abstract class BaseLayer implements Layer {
   }
 
   abstract load(assets: Asset[]): void
+
+  updatePositions(assets: Asset[]): void {
+    const map = new Map(assets.map((a) => [a.id, a]))
+    for (const entity of this.entities) {
+      const asset = map.get(entity.id!)
+      if (asset) {
+        entity.position = new Cesium.ConstantPositionProperty(
+          Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, asset.altitude),
+        )
+      }
+    }
+  }
 
   clear(): void {
     this.entities.forEach((entity) => this.viewer.entities.remove(entity))

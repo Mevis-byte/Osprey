@@ -2,11 +2,17 @@ import TopBar from '@/layout/TopBar'
 import LeftPanel from '@/layout/LeftPanel'
 import RightPanel from '@/layout/RightPanel'
 import TimelinePanel from '@/layout/TimelinePanel'
+import GlobalSearch from '@/layout/GlobalSearch'
 import GlobeViewer from '@/globe/GlobeViewer'
+import { useSimulation } from '@/hooks/useSimulation'
 
 function App() {
+  useSimulation()
+
   return (
-    <div className="grid h-screen w-screen grid-rows-[32px_1fr_32px] overflow-hidden bg-background">
+    <>
+      <GlobalSearch />
+      <div className="grid h-screen w-screen grid-rows-[32px_1fr_32px] overflow-hidden bg-background">
       <TopBar />
 
       <div className="grid min-h-0 grid-cols-1 lg:grid-cols-[280px_1fr_320px]">
@@ -25,6 +31,7 @@ function App() {
 
       <TimelinePanel />
     </div>
+    </>
   )
 }
 

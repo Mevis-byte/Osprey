@@ -1,0 +1,8 @@
+export { SimulationEntity } from './SimulationEntity'
+export { AircraftEntity } from './AircraftEntity'
+export { MaritimeEntity } from './MaritimeEntity'
+export { SatelliteEntity } from './SatelliteEntity'
+export { SimulationManager, getSimulationManager } from './SimulationManager'
+export { HistoryTracker } from './HistoryTracker'
+export type { PositionData } from './SimulationManager'
+export type { Waypoint, Route, HistoryPoint } from './types'

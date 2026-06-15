@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/store'
+import MissionDetail from './MissionDetail'
 import type { Asset, ThreatLevel, AssetStatus } from '@/types'
 import type { Aircraft, MaritimeAsset, Satellite } from '@/types'
 
@@ -159,12 +160,44 @@ function EmptyState() {
   return (
     <div className="flex flex-1 items-center justify-center px-4">
       <div className="text-center">
-        <p className="text-xs font-medium text-muted-foreground/60">Select an asset</p>
+        <p className="text-xs font-medium text-muted-foreground/60">Select an asset or mission</p>
         <p className="mt-1 text-[10px] text-muted-foreground/40">
-          Click a marker on the globe
+          Click a marker or choose a mission
         </p>
       </div>
     </div>
+  )
+}
+
+function TrackingControls({ asset }: { asset: Asset }) {
+  const trackingAssetId = useAppStore((s) => s.trackingAssetId)
+  const setTrackingAssetId = useAppStore((s) => s.setTrackingAssetId)
+  const requestFocus = useAppStore((s) => s.requestFocus)
+  const isTracking = trackingAssetId === asset.id
+
+  return (
+    <SectionCard title="Tracking" delay={0.02}>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setTrackingAssetId(isTracking ? null : asset.id)}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-[2px] border px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
+            isTracking
+              ? 'border-primary/20 bg-primary/10 text-primary'
+              : 'border-border/60 text-muted-foreground/70 hover:border-muted-foreground/30 hover:text-muted-foreground'
+          }`}
+        >
+          {isTracking ? 'Stop Tracking' : 'Track Asset'}
+        </button>
+        <button
+          type="button"
+          onClick={() => requestFocus(asset.id)}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-[2px] border border-border/60 px-2.5 py-1.5 text-[10px] font-medium text-muted-foreground/70 transition-colors hover:border-muted-foreground/30 hover:text-muted-foreground"
+        >
+          Focus Asset
+        </button>
+      </div>
+    </SectionCard>
   )
 }
 
@@ -192,6 +225,8 @@ function AssetDetail({ asset }: { asset: Asset }) {
           />
         </div>
       </motion.div>
+
+      <TrackingControls asset={asset} />
 
       <SectionCard title="Position" delay={0.03}>
         <PropertyRow label="Latitude" value={formatCoord(asset.latitude, ['N', 'S'])} />
@@ -252,16 +287,30 @@ function AssetDetail({ asset }: { asset: Asset }) {
 
 function RightPanel() {
   const selectedAsset = useAppStore((s) => s.selectedAsset)
+  const selectedMission = useAppStore((s) => s.selectedMission)
+  const setSelectedMission = useAppStore((s) => s.setSelectedMission)
 
   return (
     <aside className="flex flex-col border-l border-border bg-card">
       <div className="panel-header">
-        <h2 className="panel-title">Asset Details</h2>
+        <h2 className="panel-title">
+          {selectedMission ? 'Mission Details' : 'Asset Details'}
+        </h2>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
-          {selectedAsset ? (
+          {selectedMission ? (
+            <motion.div
+              key={selectedMission.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+            >
+              <MissionDetail mission={selectedMission} onClose={() => setSelectedMission(null)} />
+            </motion.div>
+          ) : selectedAsset ? (
             <motion.div
               key={selectedAsset.id}
               initial={{ opacity: 0 }}

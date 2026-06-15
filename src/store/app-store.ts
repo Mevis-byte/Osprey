@@ -20,6 +20,8 @@ interface Filters {
 export type FilterCategory = keyof Filters
 export type { Filters }
 
+export type HeatmapLayerKey = 'assetDensity' | 'alertDensity' | 'missionActivity'
+
 function initFilterRecord<T extends string>(keys: readonly T[], defaultValue = true): Record<T, boolean> {
   return keys.reduce((acc, key) => ({ ...acc, [key]: defaultValue }), {} as Record<T, boolean>)
 }
@@ -28,15 +30,23 @@ function generateId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-interface AppStore {
+export interface AppStore {
   selectedAsset: Asset | null
   selectedMission: Mission | null
   activeFilters: Filters
   feedData: FeedEvent[]
   assetData: Asset[]
   alerts: Alert[]
+  missions: Mission[]
+  heatmapLayers: Record<HeatmapLayerKey, boolean>
   timelinePosition: number
   simulationSpeed: number
+  isPlaying: boolean
+  trailsVisible: boolean
+  sensorConeVisible: boolean
+  gridOverlayVisible: boolean
+  trackingAssetId: string | null
+  focusRequestId: string | null
 
   setSelectedAsset: (asset: Asset | null) => void
   setSelectedMission: (mission: Mission | null) => void
@@ -44,11 +54,21 @@ interface AppStore {
   setAssetData: (data: Asset[]) => void
   setTimelinePosition: (position: number) => void
   setSimulationSpeed: (speed: number) => void
+  setPlaying: (playing: boolean) => void
+  setTrailsVisible: (visible: boolean) => void
+  toggleSensorCone: () => void
+  toggleGridOverlay: () => void
+  setTrackingAssetId: (id: string | null) => void
+  requestFocus: (id: string | null) => void
   toggleFilter: (category: FilterCategory, value: string) => void
   resetFilters: () => void
-  addAlert: (alert: Omit<Alert, 'id' | 'timestamp'>) => void
+  addAlert: (alert: Omit<Alert, 'id' | 'timestamp' | 'acknowledged' | 'acknowledgedBy'>) => void
+  addFeedEvent: (event: Omit<FeedEvent, 'id'>) => void
   removeAlert: (id: string) => void
   acknowledgeAlert: (id: string, user: string) => void
+  setMissions: (missions: Mission[]) => void
+  toggleHeatmapLayer: (key: HeatmapLayerKey) => void
+  setHeatmapLayers: (layers: Record<HeatmapLayerKey, boolean>) => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -65,8 +85,16 @@ export const useAppStore = create<AppStore>()(
       feedData: [],
       assetData: [],
       alerts: [],
+      missions: [],
+      heatmapLayers: { assetDensity: false, alertDensity: false, missionActivity: false },
       timelinePosition: Date.now(),
       simulationSpeed: 1,
+      isPlaying: false,
+      trailsVisible: true,
+      sensorConeVisible: true,
+      gridOverlayVisible: true,
+      trackingAssetId: null,
+      focusRequestId: null,
 
       setSelectedAsset: (asset) => set({ selectedAsset: asset }),
 
@@ -79,6 +107,17 @@ export const useAppStore = create<AppStore>()(
       setTimelinePosition: (position) => set({ timelinePosition: position }),
 
       setSimulationSpeed: (speed) => set({ simulationSpeed: Math.max(0, Math.min(64, speed)) }),
+
+      setPlaying: (playing) => set({ isPlaying: playing }),
+
+      setTrailsVisible: (visible) => set({ trailsVisible: visible }),
+
+      toggleSensorCone: () => set({ sensorConeVisible: !get().sensorConeVisible }),
+      toggleGridOverlay: () => set({ gridOverlayVisible: !get().gridOverlayVisible }),
+
+      setTrackingAssetId: (id) => set({ trackingAssetId: id }),
+
+      requestFocus: (id) => set({ focusRequestId: id }),
 
       toggleFilter: (category, value) => {
         const filters = get().activeFilters
@@ -108,10 +147,19 @@ export const useAppStore = create<AppStore>()(
       addAlert: (partial) => {
         const alert: Alert = {
           ...partial,
+          acknowledged: false,
           id: generateId(),
           timestamp: new Date().toISOString(),
         }
         set({ alerts: [...get().alerts, alert] })
+      },
+
+      addFeedEvent: (partial) => {
+        const event: FeedEvent = {
+          ...partial,
+          id: generateId(),
+        }
+        set({ feedData: [...get().feedData, event] })
       },
 
       removeAlert: (id) =>
@@ -123,6 +171,18 @@ export const useAppStore = create<AppStore>()(
             a.id === id ? { ...a, acknowledged: true, acknowledgedBy: user } : a,
           ),
         }),
+
+      setMissions: (missions) => set({ missions }),
+
+      toggleHeatmapLayer: (key) =>
+        set({
+          heatmapLayers: {
+            ...get().heatmapLayers,
+            [key]: !get().heatmapLayers[key],
+          },
+        }),
+
+      setHeatmapLayers: (layers) => set({ heatmapLayers: layers }),
     }),
     { name: 'osprey-store' },
   ),

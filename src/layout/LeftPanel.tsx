@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plane, Ship, Satellite, Radio } from 'lucide-react'
-import { feed } from '@/mock-data'
+import { Search, Plane, Ship, Satellite, Radio, Activity, Share2 } from 'lucide-react'
+import { useAppStore } from '@/store'
 import type { FeedEvent } from '@/types'
+import RegionalIntel from './RegionalIntel'
+import GraphWorkspace from '@/components/graph/GraphWorkspace'
 
 type ChipKey = 'aircraft' | 'maritime' | 'satellite' | 'signals'
 
@@ -66,7 +68,11 @@ function FeedItem({ event, index }: { event: FeedEvent; index: number }) {
   )
 }
 
+type PanelTab = 'stream' | 'intel' | 'graph'
+
 function LeftPanel() {
+  const feed = useAppStore((s) => s.feedData)
+  const [tab, setTab] = useState<PanelTab>('stream')
   const [search, setSearch] = useState('')
   const [activeChips, setActiveChips] = useState<Set<ChipKey>>(
     new Set(['aircraft', 'maritime', 'satellite', 'signals']),
@@ -100,62 +106,113 @@ function LeftPanel() {
   return (
     <aside className="flex flex-col border-r border-border bg-card">
       <div className="sticky top-0 z-10 border-b border-border bg-card">
-        <div className="panel-header">
-          <h2 className="panel-title">Intelligence Stream</h2>
+        <div className="flex items-center border-b border-border/40">
+          <button
+            type="button"
+            onClick={() => setTab('stream')}
+            className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
+              tab === 'stream'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            }`}
+          >
+            <Search className="h-2.5 w-2.5" />
+            Stream
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('intel')}
+            className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
+              tab === 'intel'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            }`}
+          >
+            <Activity className="h-2.5 w-2.5" />
+            Intel
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('graph')}
+            className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
+              tab === 'graph'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            }`}
+          >
+            <Share2 className="h-2.5 w-2.5" />
+            Graph
+          </button>
         </div>
 
-        <div className="px-3 pb-2 pt-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/50" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              className="w-full rounded-[2px] border border-border/60 bg-background py-1 pl-5 pr-1.5 text-[11px] text-foreground placeholder:text-muted-foreground/40 focus:border-muted-foreground/30 focus:outline-none"
-            />
-          </div>
-        </div>
+        {tab === 'stream' && (
+          <>
+            <div className="px-3 pb-2 pt-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/50" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search..."
+                  className="w-full rounded-[2px] border border-border/60 bg-background py-1 pl-5 pr-1.5 text-[11px] text-foreground placeholder:text-muted-foreground/40 focus:border-muted-foreground/30 focus:outline-none"
+                />
+              </div>
+            </div>
 
-        <div className="flex flex-wrap gap-1 px-3 pb-2">
-          {chips.map(({ key, label, icon: Icon }) => {
-            const active = activeChips.has(key)
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => toggleChip(key)}
-                className={active ? 'chip-base chip-active' : 'chip-base chip-inactive'}
-              >
-                <Icon className="h-2.5 w-2.5" />
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {filteredFeed.length === 0 ? (
-          <p className="px-3 py-12 text-center text-[11px] text-muted-foreground/60">
-            No matching intelligence
-          </p>
-        ) : (
-          <AnimatePresence mode="popLayout">
-            {filteredFeed.map((event, i) => (
-              <FeedItem key={event.id} event={event} index={i} />
-            ))}
-          </AnimatePresence>
+            <div className="flex flex-wrap gap-1 px-3 pb-2">
+              {chips.map(({ key, label, icon: Icon }) => {
+                const active = activeChips.has(key)
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleChip(key)}
+                    className={active ? 'chip-base chip-active' : 'chip-base chip-inactive'}
+                  >
+                    <Icon className="h-2.5 w-2.5" />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
 
-      <div className="sticky bottom-0 border-t border-border bg-card px-3 py-1">
-        <div className="flex items-center justify-between text-[10px] text-muted-foreground/60">
-          <span>
-            {filteredFeed.length} / {feed.length} events
-          </span>
-        </div>
+      <div className="flex-1 overflow-hidden">
+        {tab === 'stream' ? (
+          <div className="h-full overflow-y-auto">
+            {filteredFeed.length === 0 ? (
+              <p className="px-3 py-12 text-center text-[11px] text-muted-foreground/60">
+                No matching intelligence
+              </p>
+            ) : (
+              <AnimatePresence mode="popLayout">
+                {filteredFeed.map((event, i) => (
+                  <FeedItem key={event.id} event={event} index={i} />
+                ))}
+              </AnimatePresence>
+            )}
+          </div>
+        ) : tab === 'intel' ? (
+          <div className="h-full overflow-y-auto">
+            <RegionalIntel />
+          </div>
+        ) : (
+          <GraphWorkspace />
+        )}
       </div>
+
+      {tab === 'stream' && (
+        <div className="sticky bottom-0 border-t border-border bg-card px-3 py-1">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground/60">
+            <span>
+              {filteredFeed.length} / {feed.length} events
+            </span>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }
