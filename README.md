@@ -23,7 +23,7 @@
 
 ## MISSION BRIEF
 
-OSPREY transforms raw geospatial data into a unified 3D operational environment. It tracks and visualizes global multi-domain activity — satellites, aircraft, maritime vessels, ground stations, and tactical communication links — inside a single command interface.
+OSPREY transforms raw geospatial data into a unified 3D operational environment. It tracks and visualizes global multi-domain activity — satellites, aircraft, maritime vessels, ground stations, and [...]
 
 Designed around the principles of defense-grade GEOINT platforms: every pixel communicates operational meaning, every layer earns its presence.
 
@@ -34,8 +34,7 @@ Designed around the principles of defense-grade GEOINT platforms: every pixel co
 <div align="center">
 
 <!-- PRIMARY — Full command interface overview -->
-<!-- Replace the line below with: ![Command Interface](screenshots/overview.png) -->
-> 📸 `screenshots/overview.png` — Full command interface
+![Command Interface](screenshots/overview.png)
 
 <br/>
 
@@ -43,31 +42,15 @@ Designed around the principles of defense-grade GEOINT platforms: every pixel co
 <tr>
 <td align="center" width="50%">
 
-<!-- Replace with: ![Globe View](screenshots/globe.png) -->
-> 📸 `screenshots/globe.png`
-**3D Globe — Satellite Layer**
+![Asset Detail](screenshots/asset-detail.png)
 
-</td>
-<td align="center" width="50%">
-
-<!-- Replace with: ![Intelligence Stream](screenshots/intel-stream.png) -->
-> 📸 `screenshots/intel-stream.png`
-**Intelligence Stream Panel**
-
-</td>
-</tr>
-<tr>
-<td align="center" width="50%">
-
-<!-- Replace with: ![Asset Detail](screenshots/asset-detail.png) -->
-> 📸 `screenshots/asset-detail.png`
 **Asset Detail Panel**
 
 </td>
 <td align="center" width="50%">
 
-<!-- Replace with: ![Layer Controls](screenshots/layer-controls.png) -->
-> 📸 `screenshots/layer-controls.png`
+![Layer Controls](screenshots/layer-controls.png)
+
 **Layer Controls + Timeline**
 
 </td>
@@ -126,8 +109,6 @@ OSPREY
 ### 🌍 3D Globe Interface
 Real-time Earth rendering powered by CesiumJS. Zoom-adaptive data scaling, multi-layer operational overlays, and click-to-select asset panels give full command-center interactivity without UI noise.
 
-<!-- ![Globe Interface](screenshots/globe.png) -->
-
 ### 📡 Multi-Domain Tracking
 - **Satellite orbits** — TLE propagation via CelesTrak with coverage ring and sensor cone visualization
 - **Aircraft** — Live positioning via OpenSky Network (integration-ready)
@@ -137,17 +118,11 @@ Real-time Earth rendering powered by CesiumJS. Zoom-adaptive data scaling, multi
 ### ⚡ Intelligence Stream
 An event-driven operational feed that surfaces aircraft detections, satellite passes, system alerts, and environmental events in real time. Expandable to any WebSocket or REST data source.
 
-<!-- ![Intelligence Stream](screenshots/intel-stream.png) -->
-
 ### 🎯 Asset Intelligence Cards
 Hover any tracked asset for an immediate intelligence card: position, velocity, altitude, status, active network links. Full detail panel on select.
 
-<!-- ![Asset Detail](screenshots/asset-detail.png) -->
-
 ### 🕐 Timeline System
 Scrubable playback with time scaling (1× to 8×). Replay historical event sequences or run simulated scenarios forward.
-
-<!-- ![Timeline](screenshots/timeline.png) -->
 
 ---
 
@@ -168,7 +143,7 @@ Scrubable playback with time scaling (1× to 8×). Replay historical event seque
 
 ```bash
 # Clone
-git clone https://github.com/your-username/osprey.git
+git clone https://github.com/Mevis-byte/osprey.git
 cd osprey
 
 # Install
