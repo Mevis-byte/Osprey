@@ -35,6 +35,13 @@ Build and polish a real‑time geospatial Cesium dashboard with satellite/mariti
    - `HeatmapLayer` 3MB canvas allocation per update → needs canvas reuse
    - `TrailRenderer` 20k allocations per render → needs pooling
 4. **Build‑error triage** — Identified all TS errors across 12+ half‑implemented feature files (`GlobeViewer.tsx`, `LeftPanel.tsx`, `CommunicationLayer.ts`, `GroundStationLayer.ts`, `AssetHoverCard.tsx`, `LayerControlPanel.tsx`, `OperationalDashboard.tsx`, `TimelinePanel.tsx`, `RightPanel.tsx`).
+5. **Advanced Tactical Geofencing & Range Ring System** — Implemented:
+   - `Geofence` type in `src/types/index.ts`
+   - 10 mock geofences at strategic military installations worldwide (`src/mock-data/geofences.ts`)
+   - Store integration: `selectedGeofenceId`, `setSelectedGeofenceId`, `setGeofences` actions; `geofences: true` in `LayerVisibility`
+   - `GeofenceLayer.ts` — 10 concentric rings (zone‑colored: red/orange/yellow/green), 12 radial spokes, 4 cardinal markers (N/E/S/W), per‑ring distance labels (SW quadrant), center point with name label, geodesic circle computation using local ENU frame and Gaussian radius of curvature, WGS84 ellipsoid surface projection
+   - Layer toggle in `LayerControlPanel.tsx` (Shield icon)
+   - Click interaction in `GlobeViewer.tsx` — picks geofence entities via `properties.geofenceId`
 
 ### In Progress
 - Fixing remaining memory leaks:

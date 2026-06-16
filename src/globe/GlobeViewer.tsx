@@ -13,7 +13,8 @@ import {
   TrajectoryLayer, 
   RegionOverlayLayer, 
   EventMarkerLayer,
-  CommunicationLayer
+  CommunicationLayer,
+  GeofenceLayer
 } from './layers'
 import { TrailRenderer, assetTypeColor } from './trails/TrailRenderer'
 import { HeatmapManager } from './heatmap'
@@ -97,6 +98,7 @@ function GlobeViewer() {
   const requestFocus = useAppStore((s) => s.requestFocus)
   const selectedConstellationId = useAppStore((s) => s.selectedConstellationId)
   const setSelectedConstellationId = useAppStore((s) => s.setSelectedConstellationId)
+  const setSelectedGeofenceId = useAppStore((s) => s.setSelectedGeofenceId)
   const constellations = useAppStore((s) => s.constellations)
 
   const selectedId = useMemo(() => selectedAsset?.id ?? null, [selectedAsset])
@@ -208,6 +210,7 @@ function GlobeViewer() {
       new RegionOverlayLayer(viewer),
       new EventMarkerLayer(viewer),
       new CommunicationLayer(viewer),
+      new GeofenceLayer(viewer),
     ]
 
     const evLayer = layers.find(l => l.id === 'event-marker') as EventMarkerLayer
@@ -267,12 +270,23 @@ function GlobeViewer() {
       const entityId = entity?.id ?? null
       const asset = entityId ? (assetMap.get(entityId) ?? null) : null
 
+      const geofenceId = entity?.properties?.geofenceId?.getValue() ?? null
+      if (geofenceId && !asset) {
+        const gfLayer = layers.find(l => l.id === 'geofences') as GeofenceLayer | undefined
+        if (gfLayer) {
+          gfLayer.setSelectedGeofence(geofenceId)
+          setSelectedGeofenceId(geofenceId)
+        }
+        return
+      }
+
       if (asset) {
         selectedIdRef.current = entityId
         layers.forEach((l) => l.setHighlight(entityId))
         layers.forEach((l) => l.setSelectedAsset?.(asset))
         setSelectedAsset(asset)
         setSelectedConstellationId(null)
+        setSelectedGeofenceId(null)
         setTrackingAssetId(null)
         flyToAsset(asset, () => {
           setTrackingAssetId(asset.id)
@@ -288,6 +302,7 @@ function GlobeViewer() {
             layers.forEach((l) => l.setSelectedAsset?.(targetAsset))
             setSelectedAsset(targetAsset)
             setSelectedConstellationId(null)
+            setSelectedGeofenceId(null)
             setTrackingAssetId(null)
             flyToAsset(targetAsset, () => {
               setTrackingAssetId(targetAsset.id)
@@ -301,6 +316,7 @@ function GlobeViewer() {
         layers.forEach((l) => l.setSelectedAsset?.(null))
         setSelectedAsset(null)
         setSelectedConstellationId(null)
+        setSelectedGeofenceId(null)
         setTrackingAssetId(null)
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)

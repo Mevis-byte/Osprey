@@ -12,7 +12,8 @@ import {
   SunMoon, 
   CloudSun,
   Map as MapIcon,
-  Route
+  Route,
+  Shield
 } from 'lucide-react'
 
 const LAYER_CONFIG: { key: keyof LayerVisibility; label: string; icon: any }[] = [
@@ -26,6 +27,7 @@ const LAYER_CONFIG: { key: keyof LayerVisibility; label: string; icon: any }[] =
   { key: 'trails', label: 'Asset Trails', icon: Route },
   { key: 'tacticalGrid', label: 'Tactical Grid', icon: Grid3X3 },
   { key: 'regions', label: 'Region Overlays', icon: MapIcon },
+  { key: 'geofences', label: 'Geofences', icon: Shield },
   { key: 'dayNight', label: 'Day/Night', icon: SunMoon },
   { key: 'weather', label: 'Weather', icon: CloudSun },
 ]

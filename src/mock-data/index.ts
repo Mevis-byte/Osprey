@@ -11,4 +11,5 @@ export { feed } from './feed'
 export { missions } from './missions'
 export { constellations } from './constellations'
 export { regions } from './regions'
+export { geofences } from './geofences'
 export const allAssets = [...aircraft, ...maritime, ...satellites]

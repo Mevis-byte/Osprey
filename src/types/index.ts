@@ -188,3 +188,31 @@ export interface GlobeState {
   zoom: number
   viewMode: GlobeViewMode
 }
+
+export type GeofenceCategory =
+  | 'restricted-area'
+  | 'military-base'
+  | 'airbase'
+  | 'naval-facility'
+  | 'radar-installation'
+  | 'mission-zone'
+  | 'surveillance-area'
+
+export type GeofenceShape = 'circle'
+
+export type GeofencePriority = 'critical' | 'high' | 'medium' | 'low'
+
+export type GeofenceStatus = 'active' | 'inactive' | 'warning' | 'breached'
+
+export interface Geofence {
+  id: string
+  name: string
+  category: GeofenceCategory
+  shape: GeofenceShape
+  priority: GeofencePriority
+  status: GeofenceStatus
+  description: string
+  latitude: number
+  longitude: number
+  radiusKm: number
+}

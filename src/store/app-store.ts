@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import type { Asset, Alert, FeedEvent, GroundStation, Mission, ConstellationInfo, Region, OperationalMode } from '@/types'
+import type { Asset, Alert, FeedEvent, Geofence, GroundStation, Mission, ConstellationInfo, Region, OperationalMode } from '@/types'
 import type { AssetType, AssetStatus, ThreatLevel } from '@/types'
 import { constellations as constData } from '@/mock-data'
+import { geofences as gfData } from '@/mock-data'
 import { regions as regionData } from '@/mock-data'
 
 const MAX_STORE_ENTRIES = 200
@@ -39,6 +40,7 @@ export interface LayerVisibility {
   weather: boolean
   regions: boolean
   trails: boolean
+  geofences: boolean
 }
 
 function initFilterRecord<T extends string>(keys: readonly T[], defaultValue = true): Record<T, boolean> {
@@ -55,9 +57,11 @@ export interface AppStore {
   selectedGroundStation: GroundStation | null
   selectedMission: Mission | null
   selectedConstellationId: string | null
+  selectedGeofenceId: string | null
   operationalMode: OperationalMode
   constellations: ConstellationInfo[]
   regions: Region[]
+  geofences: Geofence[]
   activeFilters: Filters
   feedData: FeedEvent[]
   assetData: Asset[]
@@ -76,9 +80,11 @@ export interface AppStore {
   setSelectedGroundStation: (station: GroundStation | null) => void
   setSelectedMission: (mission: Mission | null) => void
   setSelectedConstellationId: (id: string | null) => void
+  setSelectedGeofenceId: (id: string | null) => void
   setOperationalMode: (mode: OperationalMode) => void
   setConstellations: (data: ConstellationInfo[]) => void
   setRegions: (data: Region[]) => void
+  setGeofences: (data: Geofence[]) => void
   setFeedData: (data: FeedEvent[]) => void
   setAssetData: (data: Asset[]) => void
   setTimelinePosition: (position: number) => void
@@ -108,9 +114,11 @@ export const useAppStore = create<AppStore>()(
         selectedGroundStation: null,
         selectedMission: null,
         selectedConstellationId: null,
+        selectedGeofenceId: null,
         operationalMode: 'global-surveillance',
         constellations: constData,
         regions: regionData,
+        geofences: gfData,
         activeFilters: {
           assetTypes: initFilterRecord(ALL_ASSET_TYPES),
           assetStatuses: initFilterRecord(ALL_ASSET_STATUSES),
@@ -135,6 +143,7 @@ export const useAppStore = create<AppStore>()(
           weather: false,
           regions: true,
           trails: true,
+          geofences: true,
         },
         timelinePosition: Date.now(),
         simulationSpeed: 1,
@@ -147,9 +156,11 @@ export const useAppStore = create<AppStore>()(
         setSelectedGroundStation: (station) => set({ selectedGroundStation: station }),
         setSelectedMission: (mission) => set({ selectedMission: mission }),
         setSelectedConstellationId: (id) => set({ selectedConstellationId: id }),
+        setSelectedGeofenceId: (id) => set({ selectedGeofenceId: id }),
         setOperationalMode: (mode) => set({ operationalMode: mode }),
         setConstellations: (data) => set({ constellations: data }),
         setRegions: (data) => set({ regions: data }),
+        setGeofences: (data) => set({ geofences: data }),
         setFeedData: (data) => set({ feedData: data }),
         setAssetData: (data) => set({ assetData: data }),
         setTimelinePosition: (position) => set({ timelinePosition: position }),
