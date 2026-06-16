@@ -216,3 +216,63 @@ export interface Geofence {
   longitude: number
   radiusKm: number
 }
+
+// ── Ontology Types ────────────────────────────────────────────────
+
+export type OntologyClassId = string
+
+export interface PropertyDef {
+  name: string
+  type: 'string' | 'number' | 'boolean' | 'enum' | 'date' | 'reference'
+  description: string
+  required: boolean
+  defaultValue?: unknown
+  enumValues?: string[]
+  range?: [number, number]
+  unit?: string
+}
+
+export interface RelationDef {
+  id: string
+  name: string
+  description: string
+  domain: OntologyClassId[]
+  range: OntologyClassId[]
+  inverse?: string
+  isFunctional: boolean
+  isTransitive: boolean
+  isSymmetric: boolean
+}
+
+export interface Axiom {
+  id: string
+  type: 'subclass' | 'disjoint' | 'equivalent' | 'property-domain' | 'property-range' |
+         'cardinality' | 'value-restriction' | 'instance-relation'
+  description: string
+  params: Record<string, unknown>
+}
+
+export interface OntologyClass {
+  id: OntologyClassId
+  name: string
+  description: string
+  parentIds: OntologyClassId[]
+  properties: PropertyDef[]
+  color: string
+  icon: string
+  displayOrder: number
+}
+
+export interface OntologyInstanceLink {
+  ontologyClassId: OntologyClassId
+  entityType: 'asset' | 'mission' | 'alert' | 'region' | 'ground-station' | 'constellation'
+  entityId: string
+  confidence: number
+}
+
+export interface ReasonerResult {
+  classifications: { instanceId: string; className: OntologyClassId; confidence: number }[]
+  inferredRelations: { sourceId: string; relation: string; targetId: string }[]
+  violations: { axiomId: string; message: string; entityId: string }[]
+  timestamp: number
+}

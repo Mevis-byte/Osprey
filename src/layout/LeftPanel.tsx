@@ -1,11 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plane, Ship, Satellite, Radio, Activity, Share2, Layers } from 'lucide-react'
+import { Search, Plane, Ship, Satellite, Radio, Activity, Share2, Layers, Network } from 'lucide-react'
 import { useAppStore } from '@/store'
 import type { FeedEvent } from '@/types'
 import RegionalIntel from './RegionalIntel'
 import GraphWorkspace from '@/components/graph/GraphWorkspace'
 import { LayerControlPanel } from './LayerControlPanel'
+import { OntologyPanel } from '@/components/ontology/OntologyPanel'
 
 type ChipKey = 'aircraft' | 'maritime' | 'satellite' | 'signals'
 
@@ -71,7 +72,7 @@ function FeedItem({ event, index }: { event: FeedEvent; index: number }) {
   )
 }
 
-type PanelTab = 'stream' | 'intel' | 'graph' | 'layers'
+type PanelTab = 'stream' | 'intel' | 'graph' | 'layers' | 'ontology'
 
 function LeftPanel() {
   const feed = useAppStore((s) => s.feedData)
@@ -158,6 +159,18 @@ function LeftPanel() {
             <Layers className="h-2.5 w-2.5" />
             Layers
           </button>
+          <button
+            type="button"
+            onClick={() => setTab('ontology')}
+            className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
+              tab === 'ontology'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            }`}
+          >
+            <Network className="h-2.5 w-2.5" />
+            Ontology
+          </button>
         </div>
 
         {tab === 'stream' && (
@@ -216,6 +229,8 @@ function LeftPanel() {
           </div>
         ) : tab === 'graph' ? (
           <GraphWorkspace />
+        ) : tab === 'ontology' ? (
+          <OntologyPanel />
         ) : (
           <div className="h-full overflow-y-auto custom-scrollbar">
             <LayerControlPanel />

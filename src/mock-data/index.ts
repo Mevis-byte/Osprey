@@ -12,4 +12,5 @@ export { missions } from './missions'
 export { constellations } from './constellations'
 export { regions } from './regions'
 export { geofences } from './geofences'
+export { ontologyClasses, relationDefs, axiomDefs } from './ontology'
 export const allAssets = [...aircraft, ...maritime, ...satellites]
