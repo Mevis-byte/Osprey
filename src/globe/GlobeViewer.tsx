@@ -155,6 +155,8 @@ function GlobeViewer() {
       creditContainer: document.createElement('div'),
     })
 
+    ;(globalThis as any).__cesiumViewer = viewer
+
     viewer.imageryLayers.removeAll()
     viewer.imageryLayers.addImageryProvider(CARTO_DARK_PROVIDER)
 
@@ -341,6 +343,7 @@ function GlobeViewer() {
       gridOverlayRef.current = null
       viewer.destroy()
       viewerRef.current = null
+      ;(globalThis as any).__cesiumViewer = null
       layersRef.current = []
     }
   }, [setSelectedAsset, flyToAsset])

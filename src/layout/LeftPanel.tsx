@@ -1,12 +1,13 @@
 import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plane, Ship, Satellite, Radio, Activity, Share2, Layers, Network } from 'lucide-react'
+import { Search, Plane, Ship, Satellite, Radio, Activity, Share2, Layers, Network, FileText } from 'lucide-react'
 import { useAppStore } from '@/store'
 import type { FeedEvent } from '@/types'
 import RegionalIntel from './RegionalIntel'
 import GraphWorkspace from '@/components/graph/GraphWorkspace'
 import { LayerControlPanel } from './LayerControlPanel'
 import { OntologyPanel } from '@/components/ontology/OntologyPanel'
+import { InvestigationPanel } from '@/components/investigation/InvestigationPanel'
 
 type ChipKey = 'aircraft' | 'maritime' | 'satellite' | 'signals'
 
@@ -72,7 +73,7 @@ function FeedItem({ event, index }: { event: FeedEvent; index: number }) {
   )
 }
 
-type PanelTab = 'stream' | 'intel' | 'graph' | 'layers' | 'ontology'
+type PanelTab = 'stream' | 'intel' | 'graph' | 'layers' | 'ontology' | 'cases'
 
 function LeftPanel() {
   const feed = useAppStore((s) => s.feedData)
@@ -171,6 +172,18 @@ function LeftPanel() {
             <Network className="h-2.5 w-2.5" />
             Ontology
           </button>
+          <button
+            type="button"
+            onClick={() => setTab('cases')}
+            className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
+              tab === 'cases'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            }`}
+          >
+            <FileText className="h-2.5 w-2.5" />
+            Cases
+          </button>
         </div>
 
         {tab === 'stream' && (
@@ -231,6 +244,8 @@ function LeftPanel() {
           <GraphWorkspace />
         ) : tab === 'ontology' ? (
           <OntologyPanel />
+        ) : tab === 'cases' ? (
+          <InvestigationPanel />
         ) : (
           <div className="h-full overflow-y-auto custom-scrollbar">
             <LayerControlPanel />

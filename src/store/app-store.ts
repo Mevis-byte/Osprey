@@ -103,6 +103,15 @@ export interface AppStore {
   setHeatmapLayers: (layers: Record<HeatmapLayerKey, boolean>) => void
   setLayerVisibility: (visibility: Partial<LayerVisibility>) => void
   toggleLayer: (key: keyof LayerVisibility) => void
+
+  sidebarLeft: { width: number; mode: 'expanded' | 'compact' | 'hidden' }
+  sidebarRight: { width: number; mode: 'expanded' | 'compact' | 'hidden' }
+  setSidebarLeftWidth: (width: number) => void
+  setSidebarRightWidth: (width: number) => void
+  setSidebarLeftMode: (mode: 'expanded' | 'compact' | 'hidden') => void
+  setSidebarRightMode: (mode: 'expanded' | 'compact' | 'hidden') => void
+  toggleSidebarLeft: () => void
+  toggleSidebarRight: () => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -150,6 +159,8 @@ export const useAppStore = create<AppStore>()(
         isPlaying: false,
         trackingAssetId: null,
         focusRequestId: null,
+        sidebarLeft: { width: 360, mode: 'expanded' },
+        sidebarRight: { width: 320, mode: 'expanded' },
 
         setSelectedAsset: (asset) => set({ selectedAsset: asset }),
         setHoveredAsset: (asset) => set({ hoveredAsset: asset }),
@@ -243,6 +254,29 @@ export const useAppStore = create<AppStore>()(
         
         toggleLayer: (key) => 
           set({ layerVisibility: { ...get().layerVisibility, [key]: !get().layerVisibility[key] } }),
+
+        setSidebarLeftWidth: (width) =>
+          set({ sidebarLeft: { ...get().sidebarLeft, width: Math.max(280, Math.min(700, width)) } }),
+        setSidebarRightWidth: (width) =>
+          set({ sidebarRight: { ...get().sidebarRight, width: Math.max(280, Math.min(700, width)) } }),
+        setSidebarLeftMode: (mode) =>
+          set({ sidebarLeft: { ...get().sidebarLeft, mode } }),
+        setSidebarRightMode: (mode) =>
+          set({ sidebarRight: { ...get().sidebarRight, mode } }),
+        toggleSidebarLeft: () => {
+          const current = get().sidebarLeft
+          const next: 'expanded' | 'compact' | 'hidden' =
+            current.mode === 'expanded' ? 'compact' :
+            current.mode === 'compact' ? 'hidden' : 'expanded'
+          set({ sidebarLeft: { ...current, mode: next } })
+        },
+        toggleSidebarRight: () => {
+          const current = get().sidebarRight
+          const next: 'expanded' | 'compact' | 'hidden' =
+            current.mode === 'expanded' ? 'compact' :
+            current.mode === 'compact' ? 'hidden' : 'expanded'
+          set({ sidebarRight: { ...current, mode: next } })
+        },
       }),
       { 
         name: 'osprey-store',
@@ -250,6 +284,8 @@ export const useAppStore = create<AppStore>()(
           layerVisibility: state.layerVisibility,
           operationalMode: state.operationalMode,
           simulationSpeed: state.simulationSpeed,
+          sidebarLeft: state.sidebarLeft,
+          sidebarRight: state.sidebarRight,
         }),
       },
     ),

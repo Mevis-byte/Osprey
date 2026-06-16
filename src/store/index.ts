@@ -1,3 +1,5 @@
 export { useGlobeStore } from './globe-store'
 export { useAppStore } from './app-store'
+export { useCaseStore } from './case-store'
 export type { Filters, FilterCategory, AppStore, HeatmapLayerKey } from './app-store'
+export type { CaseStore } from './case-store'

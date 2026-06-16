@@ -276,3 +276,66 @@ export interface ReasonerResult {
   violations: { axiomId: string; message: string; entityId: string }[]
   timestamp: number
 }
+
+// ── Investigation & Case Management ────────────────────────────────
+
+export type CasePriority = 'low' | 'medium' | 'high' | 'critical'
+export type CaseStatus = 'open' | 'in-progress' | 'pending-review' | 'closed' | 'archived'
+
+export interface CaseEntityRef {
+  entityType: 'asset' | 'mission' | 'alert' | 'region' | 'ground-station'
+  entityId: string
+  entityName: string
+  addedAt: string
+}
+
+export interface CaseEventRef {
+  eventId: string
+  title: string
+  timestamp: string
+}
+
+export interface CaseAlertRef {
+  alertId: string
+  title: string
+  severity: string
+}
+
+export interface CaseNote {
+  id: string
+  author: string
+  content: string
+  createdAt: string
+}
+
+export interface CaseAttachment {
+  id: string
+  name: string
+  type: string
+  url: string
+  size: number
+}
+
+export interface CaseScreenshot {
+  id: string
+  name: string
+  dataUrl: string
+  capturedAt: string
+}
+
+export interface InvestigationCase {
+  id: string
+  title: string
+  description: string
+  priority: CasePriority
+  status: CaseStatus
+  owner: string
+  createdAt: string
+  updatedAt: string
+  entities: CaseEntityRef[]
+  events: CaseEventRef[]
+  alerts: CaseAlertRef[]
+  screenshots: CaseScreenshot[]
+  notes: CaseNote[]
+  attachments: CaseAttachment[]
+}

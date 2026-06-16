@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/store'
+import { useCaseStore } from '@/store/case-store'
 import MissionDetail from './MissionDetail'
 import { OperationalDashboard } from './OperationalDashboard'
 import type { Asset, ThreatLevel, AssetStatus } from '@/types'
@@ -189,6 +190,67 @@ function TrackingControls({ asset }: { asset: Asset }) {
   )
 }
 
+function CaseAssignment({ asset }: { asset: Asset }) {
+  const cases = useCaseStore((s) => s.cases)
+  const addEntityToCase = useCaseStore((s) => s.addEntityToCase)
+  const setSelectedCaseId = useCaseStore((s) => s.setSelectedCaseId)
+
+  const activeCases = cases.filter(
+    (c) => c.status !== 'archived' && c.status !== 'closed' && !c.entities.some((e) => e.entityId === asset.id),
+  )
+
+  const linkedCases = cases.filter((c) => c.entities.some((e) => e.entityId === asset.id))
+
+  const handleAdd = (caseId: string) => {
+    addEntityToCase(caseId, {
+      entityType: 'asset',
+      entityId: asset.id,
+      entityName: asset.name,
+      addedAt: new Date().toISOString(),
+    })
+  }
+
+  return (
+    <SectionCard title="Investigation Cases" delay={0.025}>
+      {linkedCases.length > 0 && (
+        <div className="mb-1.5 space-y-0.5">
+          {linkedCases.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setSelectedCaseId(c.id)}
+              className="flex w-full items-center gap-1.5 rounded-[2px] border border-cyan-400/20 bg-cyan-500/5 px-2 py-1 text-left transition-colors hover:bg-cyan-500/10"
+            >
+              <span className="h-1.5 w-1.5 shrink-0 rounded-[2px] bg-cyan-400" />
+              <span className="min-w-0 flex-1 truncate text-[9px] text-foreground/70">{c.title}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {activeCases.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {activeCases.slice(0, 4).map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => handleAdd(c.id)}
+              className="rounded-[2px] border border-border/60 px-1.5 py-0.5 text-[8px] text-muted-foreground/60 hover:border-cyan-400/30 hover:text-cyan-400 transition-colors"
+            >
+              + {c.id}
+            </button>
+          ))}
+          {activeCases.length > 4 && (
+            <span className="text-[7px] text-muted-foreground/40 self-center">+{activeCases.length - 4} more</span>
+          )}
+        </div>
+      )}
+      {activeCases.length === 0 && linkedCases.length === 0 && (
+        <p className="text-[9px] text-muted-foreground/50">No active cases. Add this asset to a case from the Cases panel.</p>
+      )}
+    </SectionCard>
+  )
+}
+
 function AssetDetail({ asset }: { asset: Asset }) {
   const signal = mockSignalStrength(asset.id)
   const threat = mockThreatLevel(asset)
@@ -215,6 +277,8 @@ function AssetDetail({ asset }: { asset: Asset }) {
       </motion.div>
 
       <TrackingControls asset={asset} />
+
+      <CaseAssignment asset={asset} />
 
       <SectionCard title="Position" delay={0.03}>
         <PropertyRow label="Latitude" value={formatCoord(asset.latitude, ['N', 'S'])} />
