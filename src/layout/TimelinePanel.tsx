@@ -1,9 +1,9 @@
-import { useMemo, useCallback, useState, useRef, useEffect } from 'react'
-import { Play, Pause, Route, Layers, Radio, Grid3x3 } from 'lucide-react'
+import { useMemo, useCallback } from 'react'
+import { Play, Pause } from 'lucide-react'
 import { useAppStore } from '@/store'
-import type { HeatmapLayerKey } from '@/store'
 
-const SPEEDS = [1, 2, 4, 10] as const
+
+const SPEEDS = [1, 2, 4, 8, 16] as const
 
 function useTimeRange() {
   return useMemo(() => {
@@ -27,43 +27,31 @@ function formatPosition(ms: number): string {
   return `${month}/${day} ${hours}:${minutes}Z`
 }
 
-const HEATMAP_ITEMS: { key: HeatmapLayerKey; label: string }[] = [
-  { key: 'assetDensity', label: 'Asset Density' },
-  { key: 'alertDensity', label: 'Alert Density' },
-  { key: 'missionActivity', label: 'Mission Activity' },
-]
-
 function TimelinePanel() {
   const timelinePosition = useAppStore((s) => s.timelinePosition)
   const simulationSpeed = useAppStore((s) => s.simulationSpeed)
   const isPlaying = useAppStore((s) => s.isPlaying)
-  const trailsVisible = useAppStore((s) => s.trailsVisible)
-  const sensorConeVisible = useAppStore((s) => s.sensorConeVisible)
-  const gridOverlayVisible = useAppStore((s) => s.gridOverlayVisible)
-  const heatmapLayers = useAppStore((s) => s.heatmapLayers)
+  const missions = useAppStore((s) => s.missions)
+  const alerts = useAppStore((s) => s.alerts)
   const setTimelinePosition = useAppStore((s) => s.setTimelinePosition)
   const setSimulationSpeed = useAppStore((s) => s.setSimulationSpeed)
   const setPlaying = useAppStore((s) => s.setPlaying)
-  const setTrailsVisible = useAppStore((s) => s.setTrailsVisible)
-  const toggleSensorCone = useAppStore((s) => s.toggleSensorCone)
-  const toggleGridOverlay = useAppStore((s) => s.toggleGridOverlay)
-  const toggleHeatmapLayer = useAppStore((s) => s.toggleHeatmapLayer)
-
-  const [heatmapOpen, setHeatmapOpen] = useState(false)
-  const heatmapRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!heatmapOpen) return
-    function handleClick(e: MouseEvent) {
-      if (heatmapRef.current && !heatmapRef.current.contains(e.target as Node)) {
-        setHeatmapOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [heatmapOpen])
 
   const range = useTimeRange()
+
+  const timelineMarkers = useMemo(() => {
+    const markers: { time: number; type: 'mission' | 'alert'; color: string }[] = []
+    
+    missions.forEach(m => {
+      markers.push({ time: new Date(m.startTime).getTime(), type: 'mission', color: 'bg-cyan-500' })
+    })
+    
+    alerts.forEach(a => {
+      markers.push({ time: new Date(a.timestamp).getTime(), type: 'alert', color: 'bg-red-500' })
+    })
+    
+    return markers
+  }, [missions, alerts])
 
   const clampedPosition = Math.max(range.start, Math.min(range.end, timelinePosition))
   const pct = ((clampedPosition - range.start) / (range.end - range.start)) * 100
@@ -76,159 +64,79 @@ function TimelinePanel() {
     [range, setTimelinePosition],
   )
 
-  const togglePlay = useCallback(() => {
-    setPlaying(!isPlaying)
-  }, [isPlaying, setPlaying])
-
-  const anyHeatmapVisible = Object.values(heatmapLayers).some(Boolean)
-
   return (
-    <footer className="flex items-center gap-2.5 border-t border-border bg-card px-3" style={{ height: 32 }}>
-      <button
-        type="button"
-        onClick={togglePlay}
-        className="flex h-5 w-5 items-center justify-center rounded-[2px] border border-border/60 text-muted-foreground/70 transition-colors hover:border-muted-foreground/30 hover:text-muted-foreground"
-        aria-label={isPlaying ? 'Pause' : 'Play'}
-      >
-        {isPlaying ? <Pause className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5" />}
-      </button>
-
-      <div className="flex items-center gap-px">
-        {SPEEDS.map((speed) => {
-          const active = simulationSpeed === speed
-          return (
-            <button
-              key={speed}
-              type="button"
-              onClick={() => setSimulationSpeed(speed)}
-              className={`rounded-[2px] border px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
-                active
-                  ? 'border-primary/20 bg-primary/10 text-primary'
-                  : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
-              }`}
-            >
-              {speed}x
-            </button>
-          )
-        })}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setTrailsVisible(!trailsVisible)}
-        className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
-          trailsVisible
-            ? 'border-primary/20 bg-primary/10 text-primary'
-            : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
-        }`}
-        aria-label={trailsVisible ? 'Hide trails' : 'Show trails'}
-      >
-        <Route className="h-2.5 w-2.5" />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => toggleSensorCone()}
-        className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
-          sensorConeVisible
-            ? 'border-primary/20 bg-primary/10 text-primary'
-            : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
-        }`}
-        aria-label={sensorConeVisible ? 'Hide sensor cone' : 'Show sensor cone'}
-      >
-        <Radio className="h-2.5 w-2.5" />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => toggleGridOverlay()}
-        className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
-          gridOverlayVisible
-            ? 'border-primary/20 bg-primary/10 text-primary'
-            : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
-        }`}
-        aria-label={gridOverlayVisible ? 'Hide tactical grid' : 'Show tactical grid'}
-      >
-        <Grid3x3 className="h-2.5 w-2.5" />
-      </button>
-
-      <div ref={heatmapRef} className="relative">
+    <footer className="flex items-center gap-4 border-t border-white/5 bg-[#0a0c12] px-4" style={{ height: 40 }}>
+      <div className="flex items-center gap-1.5">
         <button
           type="button"
-          onClick={() => setHeatmapOpen(!heatmapOpen)}
-          className={`flex h-5 w-5 items-center justify-center rounded-[2px] border transition-colors ${
-            anyHeatmapVisible
-              ? 'border-primary/20 bg-primary/10 text-primary'
-              : 'border-border/60 text-muted-foreground/60 hover:border-muted-foreground/30 hover:text-muted-foreground'
+          onClick={() => setPlaying(!isPlaying)}
+          className={`flex h-6 w-6 items-center justify-center rounded-sm border transition-all ${
+            isPlaying 
+              ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400' 
+              : 'border-white/10 text-muted-foreground/60 hover:border-white/20 hover:text-foreground'
           }`}
-          aria-label="Heatmap layers"
         >
-          <Layers className="h-2.5 w-2.5" />
+          {isPlaying ? <Pause className="h-3 w-3 fill-current" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
         </button>
-        {heatmapOpen && (
-          <div className="absolute bottom-full left-1/2 z-50 mb-1.5 -translate-x-1/2 rounded-[2px] border border-border/60 bg-card py-1 shadow-lg">
-            {HEATMAP_ITEMS.map(({ key, label }) => {
-              const active = heatmapLayers[key]
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => toggleHeatmapLayer(key)}
-                  className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-1 text-[10px] transition-colors hover:bg-accent/30 ${
-                    active ? 'text-primary' : 'text-muted-foreground/70'
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-[2px] ${active ? 'bg-primary' : 'bg-muted-foreground/30'}`}
-                  />
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-        )}
+
+        <div className="flex items-center gap-px rounded-sm border border-white/5 bg-white/5 p-0.5">
+          {SPEEDS.map((speed) => {
+            const active = simulationSpeed === speed
+            return (
+              <button
+                key={speed}
+                type="button"
+                onClick={() => setSimulationSpeed(speed)}
+                className={`rounded-[1px] px-2 py-0.5 text-[9px] font-bold transition-all ${
+                  active
+                    ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.2)]'
+                    : 'text-muted-foreground/40 hover:text-muted-foreground/70'
+                }`}
+              >
+                {speed}x
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      <span className="h-4 w-px bg-border/60" />
+      <div className="h-4 w-px bg-white/5" />
 
-      <div className="relative flex flex-1 items-center" style={{ height: 16 }}>
+      <div className="relative flex flex-1 items-center" style={{ height: 24 }}>
+        {/* Track Markers */}
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 overflow-hidden pointer-events-none">
+          {timelineMarkers.map((m, i) => {
+            const mPct = ((m.time - range.start) / (range.end - range.start)) * 100
+            if (mPct < 0 || mPct > 100) return null
+            return (
+              <div 
+                key={i}
+                className={`absolute h-full w-0.5 ${m.color} opacity-60`}
+                style={{ left: `${mPct}%` }}
+              />
+            )
+          })}
+        </div>
+
         <input
           type="range"
           min={0}
           max={100}
-          step={0.1}
+          step={0.01}
           value={pct}
           onChange={handleSliderChange}
-          className="absolute inset-x-0 top-1/2 z-10 h-1 -translate-y-1/2 cursor-pointer appearance-none rounded-full bg-transparent
-            [&::-webkit-slider-runnable-track]:h-1
-            [&::-webkit-slider-runnable-track]:rounded-full
-            [&::-webkit-slider-runnable-track]:bg-muted/60
-            [&::-webkit-slider-thumb]:mt-[-3px]
-            [&::-webkit-slider-thumb]:h-3
-            [&::-webkit-slider-thumb]:w-3
+          className="absolute inset-x-0 top-1/2 z-10 h-1 -translate-y-1/2 cursor-pointer appearance-none rounded-full bg-white/5
+            [&::-webkit-slider-thumb]:h-4
+            [&::-webkit-slider-thumb]:w-1
             [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:border
-            [&::-webkit-slider-thumb]:border-border
-            [&::-webkit-slider-thumb]:bg-foreground
-            [&::-webkit-slider-thumb]:shadow-sm
-            hover:[&::-webkit-slider-thumb]:bg-primary
-            [&::-moz-range-track]:h-1
-            [&::-moz-range-track]:rounded-full
-            [&::-moz-range-track]:bg-muted/60
-            [&::-moz-range-thumb]:h-3
-            [&::-moz-range-thumb]:w-3
-            [&::-moz-range-thumb]:rounded-full
-            [&::-moz-range-thumb]:border
-            [&::-moz-range-thumb]:border-border
-            [&::-moz-range-thumb]:bg-foreground
+            [&::-webkit-slider-thumb]:bg-cyan-400
+            [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(34,211,238,0.8)]
+            hover:[&::-webkit-slider-thumb]:scale-y-125
+            transition-all
           "
-          style={{
-            background: `linear-gradient(to right, hsl(var(--primary) / 0.35) 0%, hsl(var(--primary) / 0.35) ${pct}%, transparent ${pct}%, transparent 100%)`,
-          }}
         />
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between">
+        <div className="pointer-events-none absolute inset-x-0 -bottom-1 flex items-end justify-between">
           {MARKERS.map((h) => {
             const markerMs = range.start + (h - 14) * 3_600_000
             const markerPct = ((markerMs - range.start) / (range.end - range.start)) * 100
@@ -238,8 +146,9 @@ function TimelinePanel() {
                 className="flex flex-col items-center"
                 style={{ position: 'absolute', left: `${markerPct}%`, transform: 'translateX(-50%)' }}
               >
-                <span className="mt-0.5 text-[8px] text-muted-foreground/40">
-                  {String(h).padStart(2, '0')}:00
+                <div className="h-1 w-px bg-white/10 mb-1" />
+                <span className="text-[7px] font-bold text-muted-foreground/30 uppercase tabular-nums">
+                  {String(h).padStart(2, '0')}:00Z
                 </span>
               </div>
             )
@@ -247,11 +156,16 @@ function TimelinePanel() {
         </div>
       </div>
 
-      <span className="h-4 w-px bg-border/60" />
+      <div className="h-4 w-px bg-white/5" />
 
-      <span className="whitespace-nowrap font-mono text-[10px] tabular-nums tracking-wider text-foreground/80">
-        {formatPosition(clampedPosition)}
-      </span>
+      <div className="flex flex-col items-end justify-center min-w-[100px]">
+        <span className="text-[10px] font-black tabular-nums tracking-wider text-cyan-400/90 leading-none">
+          {formatPosition(clampedPosition).split(' ')[1]}
+        </span>
+        <span className="text-[7px] font-bold text-muted-foreground/40 uppercase tracking-tighter mt-0.5">
+          {formatPosition(clampedPosition).split(' ')[0]} / UTC-0
+        </span>
+      </div>
     </footer>
   )
 }

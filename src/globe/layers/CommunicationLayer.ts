@@ -4,7 +4,7 @@ import { groundStations } from '@/mock-data'
 import type { Asset } from '@/types'
 import { BaseLayer } from './BaseLayer'
 
-const LINK_COLOR = Cesium.Color.fromCssColorString('#38bdf8')
+const LINK_COLOR = Cesium.Color.fromCssColorString('#10b981')
 const LINK_SELECTED_COLOR = Cesium.Color.fromCssColorString('#fbbf24')
 
 function findSatellite(assetId: string): Asset | undefined {
@@ -13,6 +13,7 @@ function findSatellite(assetId: string): Asset | undefined {
 
 export class CommunicationLayer extends BaseLayer {
   private linkEntities: Cesium.Entity[] = []
+  private selectedAssetId: string | null = null
 
   constructor(viewer: Cesium.Viewer) {
     super(viewer, 'communications', 'Communications')
@@ -48,48 +49,44 @@ export class CommunicationLayer extends BaseLayer {
               mid.z += Math.max(asset.altitude * 0.18, 1000000)
               return [stationPos, mid, satellitePos]
             }, false),
-            width: 1.8,
-            material: new Cesium.PolylineGlowMaterialProperty({
-              color: LINK_COLOR.withAlpha(0.55),
-              glowPower: 0.12,
+            width: new Cesium.CallbackProperty(() => {
+              return this.isPathActive(station.id, satelliteId) ? 2.2 : 1.2
+            }, false),
+            material: new Cesium.PolylineDashMaterialProperty({
+              color: new Cesium.CallbackProperty(() => {
+                const isSelected = this.isPathActive(station.id, satelliteId)
+                const baseColor = isSelected ? LINK_SELECTED_COLOR : LINK_COLOR
+                return baseColor.withAlpha(isSelected ? 0.9 : 0.3)
+              }, false),
+              dashLength: 16,
+              dashPattern: 255,
             }),
-            clampToGround: false,
           },
           show: true,
         })
+        
         this.linkEntities.push(entity)
       }
     }
   }
 
-  updatePositions(_assets: Asset[]): void {}
+  private isPathActive(stationId: string, satelliteId: string): boolean {
+    if (!this.selectedAssetId) return false
+    return this.selectedAssetId === stationId || this.selectedAssetId === satelliteId
+  }
+
+  setSelectedAsset(asset: Asset | null): void {
+    this.selectedAssetId = asset?.id ?? null
+  }
+
+  setHighlight(_entityId: string | null): void {
+    // Handling selection via setSelectedAsset for network highlighting
+  }
 
   clear(): void {
     for (const entity of this.linkEntities) {
       this.viewer.entities.remove(entity)
     }
     this.linkEntities = []
-  }
-
-  setVisible(visible: boolean): void {
-    this._visible = visible
-    for (const entity of this.linkEntities) {
-      entity.show = visible
-    }
-  }
-
-  setHighlight(entityId: string | null): void {
-    const selectedStationId = entityId && entityId.startsWith('GS-') ? entityId : null
-    for (const entity of this.linkEntities) {
-      const isSelected = selectedStationId !== null && entity.name?.startsWith(selectedStationId)
-      const polyline = entity.polyline
-      if (polyline) {
-        polyline.material = new Cesium.PolylineGlowMaterialProperty({
-          color: (isSelected ? LINK_SELECTED_COLOR : LINK_COLOR).withAlpha(isSelected ? 0.95 : 0.55),
-          glowPower: isSelected ? 0.2 : 0.12,
-        })
-        polyline.width = new Cesium.ConstantProperty(isSelected ? 2.6 : 1.8)
-      }
-    }
   }
 }

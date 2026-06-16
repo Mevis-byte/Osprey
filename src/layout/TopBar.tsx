@@ -36,6 +36,8 @@ function TopBar() {
   const utcTime = useUtcClock()
   const alerts = useAppStore((s) => s.alerts)
   const assetData = useAppStore((s) => s.assetData)
+  const operationalMode = useAppStore((s) => s.operationalMode)
+  const setOperationalMode = useAppStore((s) => s.setOperationalMode)
 
   return (
     <motion.header
@@ -45,28 +47,43 @@ function TopBar() {
       className="flex items-center justify-between border-b border-border bg-card px-3"
       style={{ height: 32 }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
-          <Satellite className="h-3.5 w-3.5 text-primary" />
-          <span className="text-sm font-bold tracking-[0.15em] text-primary">OSPREY</span>
+          <div className="flex h-4 w-4 items-center justify-center rounded-sm bg-primary/10 border border-primary/20">
+            <Satellite className="h-2.5 w-2.5 text-primary" />
+          </div>
+          <span className="text-xs font-black tracking-[0.2em] text-primary">OSPREY</span>
         </div>
 
-        <span className="h-4 w-px bg-border" />
+        <span className="h-3 w-px bg-white/10" />
 
-        <span className="text-[10px] font-medium tracking-wider text-muted-foreground">
-          GEOINT NODE-01
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold tracking-widest text-muted-foreground/40 uppercase">NODE:</span>
+          <span className="text-[10px] font-bold tracking-wider text-foreground/80">GEOINT-01</span>
+        </div>
 
-        <span className="h-4 w-px bg-border" />
+        <span className="h-3 w-px bg-white/10" />
 
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold tracking-widest text-muted-foreground/40 uppercase">MODE:</span>
+          <select 
+            value={operationalMode}
+            onChange={(e) => setOperationalMode(e.target.value as any)}
+            className="bg-transparent text-[10px] font-bold tracking-wider text-cyan-400 uppercase outline-none cursor-pointer hover:text-cyan-300 transition-colors"
+          >
+            <option value="global-surveillance">Global Surveillance</option>
+            <option value="space-operations">Space Operations</option>
+            <option value="maritime-operations">Maritime Operations</option>
+            <option value="tactical-operations">Tactical Operations</option>
+          </select>
+        </div>
+
+        <span className="h-3 w-px bg-white/10" />
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
             <StatusDot />
-            <span className="text-[10px] text-muted-foreground">SYS OK</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <StatusDot />
-            <span className="text-[10px] text-muted-foreground">NET OK</span>
+            <span className="text-[9px] font-bold text-muted-foreground/60 uppercase">System Nominal</span>
           </div>
         </div>
       </div>

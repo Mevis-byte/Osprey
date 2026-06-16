@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, MaritimeAsset } from '@/types'
+import { MARKER_ICONS } from './label-styles'
 
 function isMaritime(asset: Asset): asset is MaritimeAsset {
   return asset.type === 'maritime'
@@ -25,12 +26,21 @@ export class MaritimeLayer extends BaseLayer {
         0,
       )
 
+      const labelText = new Cesium.CallbackProperty(() => {
+        const isHovered = this.hoveredId === asset.id
+        const isSelected = this.highlightedId === asset.id
+        if (isHovered || isSelected) {
+          return `[ ${asset.name.toUpperCase()} ]\nSPD: ${asset.speed.toFixed(1)} KTS\nDEST: ${asset.destination || 'UNKNOWN'}`
+        }
+        return asset.name
+      }, false)
+
       const entity = this.viewer.entities.add({
         id: asset.id,
         name: asset.name,
         position,
-        point: this.createPoint(MARITIME_COLOR),
-        label: this.createLabel(asset.name, {
+        billboard: this.createMarker(MARKER_ICONS.maritime),
+        label: this.createLabel(labelText, {
           fillColor: MARITIME_COLOR,
         }),
         properties: {

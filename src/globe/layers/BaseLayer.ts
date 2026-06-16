@@ -12,6 +12,7 @@ export interface Layer {
   clear(): void
   setVisible(visible: boolean): void
   setHighlight(entityId: string | null): void
+  setHover?(entityId: string | null): void
   setSelectedAsset?(asset: Asset | null): void
   destroy?(): void
 }
@@ -21,6 +22,7 @@ export abstract class BaseLayer implements Layer {
   protected entities: Cesium.Entity[] = []
   protected _visible = true
   protected highlightedId: string | null = null
+  protected hoveredId: string | null = null
 
   constructor(
     viewer: Cesium.Viewer,
@@ -44,6 +46,11 @@ export abstract class BaseLayer implements Layer {
         entity.position = new Cesium.ConstantPositionProperty(
           Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, asset.altitude),
         )
+        if (entity.billboard) {
+          if ('heading' in asset) {
+            entity.billboard.rotation = Cesium.Math.toRadians(360 - asset.heading) as unknown as Cesium.Property
+          }
+        }
       }
     }
   }
@@ -65,14 +72,13 @@ export abstract class BaseLayer implements Layer {
 
     if (this.highlightedId) {
       const prev = this.entities.find((e) => e.id === this.highlightedId)
-      if (prev?.point) {
-        const p = prev.point as unknown as Record<string, unknown>
-        p.pixelSize = 8
-        p.outlineWidth = 1.5
-        p.outlineColor = Cesium.Color.WHITE
+      if (prev?.billboard) {
+        const b = prev.billboard as unknown as Record<string, unknown>
+        b.scale = 0.5
+        b.color = Cesium.Color.WHITE
       }
       if (prev?.label) {
-        prev.label.showBackground = new Cesium.ConstantProperty(false)
+        prev.label.scale = 1.0 as unknown as Cesium.Property
       }
     }
 
@@ -80,26 +86,59 @@ export abstract class BaseLayer implements Layer {
 
     if (entityId) {
       const next = this.entities.find((e) => e.id === entityId)
-      if (next?.point) {
-        const p = next.point as unknown as Record<string, unknown>
-        p.pixelSize = 12
-        p.outlineWidth = 3
-        p.outlineColor = Cesium.Color.fromCssColorString('#60a5fa')
+      if (next?.billboard) {
+        const b = next.billboard as unknown as Record<string, unknown>
+        b.scale = 0.7
+        b.color = Cesium.Color.fromCssColorString('#60a5fa')
       }
       if (next?.label) {
-        next.label.showBackground = new Cesium.ConstantProperty(true)
+        next.label.scale = 1.1 as unknown as Cesium.Property
+      }
+    }
+  }
+
+  setHover(entityId: string | null): void {
+    if (this.hoveredId === entityId) return
+
+    if (this.hoveredId) {
+      const prev = this.entities.find((e) => e.id === this.hoveredId)
+      if (prev?.label && this.highlightedId !== this.hoveredId) {
+        prev.label.scale = 1.0 as unknown as Cesium.Property
+      }
+    }
+
+    this.hoveredId = entityId
+
+    if (entityId) {
+      const next = this.entities.find((e) => e.id === entityId)
+      if (next?.label) {
+        next.label.scale = 1.15 as unknown as Cesium.Property
       }
     }
   }
 
   protected createPoint(color: Cesium.Color): Cesium.PointGraphics {
     return new Cesium.PointGraphics({
-      pixelSize: 8,
+      pixelSize: 10,
       color,
       outlineColor: Cesium.Color.WHITE,
-      outlineWidth: 1.5,
+      outlineWidth: 2.0,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1, 1.5e8, 0.5),
+      scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.2, 2.5e7, 0.6),
+    })
+  }
+
+  protected createMarker(image: string): Cesium.BillboardGraphics {
+    return new Cesium.BillboardGraphics({
+      image,
+      scale: 0.7,
+      horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+      verticalOrigin: Cesium.VerticalOrigin.CENTER,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.2, 2.5e7, 0.6),
+      heightReference: Cesium.HeightReference.NONE,
+      rotation: 0,
+      alignedAxis: Cesium.Cartesian3.UNIT_Z,
     })
   }
 

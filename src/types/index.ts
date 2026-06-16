@@ -1,3 +1,9 @@
+export type OperationalMode =
+  | 'global-surveillance'
+  | 'space-operations'
+  | 'maritime-operations'
+  | 'tactical-operations'
+
 export type AssetType =
   | 'fixed-wing'
   | 'rotary-wing'

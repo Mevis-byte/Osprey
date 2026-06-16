@@ -1,12 +1,23 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import * as Cesium from 'cesium'
-import { motion, AnimatePresence } from 'framer-motion'
-import { allAssets, missions } from '@/mock-data'
+import { AnimatePresence } from 'framer-motion'
+import { allAssets, missions, groundStations } from '@/mock-data'
 import { useAppStore } from '@/store'
-import { AircraftLayer, MaritimeLayer, SatelliteLayer, SensorConeLayer, ConstellationLayer, TrajectoryLayer, RegionOverlayLayer, EventMarkerLayer } from './layers'
+import { 
+  AircraftLayer, 
+  MaritimeLayer, 
+  SatelliteLayer, 
+  GroundStationLayer,
+  SensorConeLayer, 
+  ConstellationLayer, 
+  TrajectoryLayer, 
+  RegionOverlayLayer, 
+  EventMarkerLayer,
+  CommunicationLayer
+} from './layers'
 import { TrailRenderer, assetTypeColor } from './trails/TrailRenderer'
 import { HeatmapManager } from './heatmap'
-import { SatelliteTooltip } from './tooltip/SatelliteTooltip'
+import { AssetHoverCard } from './tooltip/AssetHoverCard'
 import { SatelliteCoverageRings } from './coverage/SatelliteCoverageRings'
 import { SatelliteSensorCone } from './coverage/SatelliteSensorCone'
 import { SatelliteCoverageGrid } from './coverage/SatelliteCoverageGrid'
@@ -15,7 +26,7 @@ import { TacticalGridOverlay } from './grid/TacticalGridOverlay'
 
 import { getSimulationManager } from '@/services/simulation'
 import type { Layer } from './layers'
-import type { Asset, Satellite } from '@/types'
+import type { Asset } from '@/types'
 
 const CESIUM_TOKEN = import.meta.env.VITE_CESIUM_ION_TOKEN
 
@@ -32,7 +43,10 @@ const CARTO_DARK_PROVIDER = new Cesium.UrlTemplateImageryProvider({
   maximumLevel: 19,
 })
 
-const assetMap = new Map<string, Asset>(allAssets.map((a) => [a.id, a]))
+const assetMap = new Map<string, Asset>([
+  ...allAssets.map((a): [string, Asset] => [a.id, a]),
+  ...groundStations.map((gs): [string, Asset] => [gs.id, gs as unknown as Asset]),
+])
 
 async function initTerrain(): Promise<Cesium.TerrainProvider> {
   try {
@@ -70,12 +84,13 @@ function GlobeViewer() {
   })
 
   const setSelectedAsset = useAppStore((s) => s.setSelectedAsset)
+  const setHoveredAsset = useAppStore((s) => s.setHoveredAsset)
   const selectedAsset = useAppStore((s) => s.selectedAsset)
-  const selectedId = selectedAsset?.id ?? null
+  const layerVisibility = useAppStore((s) => s.layerVisibility)
   const assetData = useAppStore((s) => s.assetData)
-  const trailsVisible = useAppStore((s) => s.trailsVisible)
-  const sensorConeVisible = useAppStore((s) => s.sensorConeVisible)
-  const gridOverlayVisible = useAppStore((s) => s.gridOverlayVisible)
+  const trailsVisible = useAppStore((s) => s.layerVisibility.trails)
+  const sensorConesVisible = useAppStore((s) => s.layerVisibility.sensorCones)
+  const gridOverlayVisible = useAppStore((s) => s.layerVisibility.tacticalGrid)
   const trackingAssetId = useAppStore((s) => s.trackingAssetId)
   const setTrackingAssetId = useAppStore((s) => s.setTrackingAssetId)
   const focusRequestId = useAppStore((s) => s.focusRequestId)
@@ -83,6 +98,15 @@ function GlobeViewer() {
   const selectedConstellationId = useAppStore((s) => s.selectedConstellationId)
   const setSelectedConstellationId = useAppStore((s) => s.setSelectedConstellationId)
   const constellations = useAppStore((s) => s.constellations)
+
+  const selectedId = useMemo(() => selectedAsset?.id ?? null, [selectedAsset])
+
+  useEffect(() => {
+    layersRef.current.forEach((l) => {
+      const isVisible = layerVisibility[l.id as keyof typeof layerVisibility] ?? true
+      l.setVisible(isVisible)
+    })
+  }, [layerVisibility])
 
   const flyToAsset = useCallback((asset: Asset, onComplete?: () => void) => {
     const viewer = viewerRef.current
@@ -125,7 +149,7 @@ function GlobeViewer() {
       sceneModePicker: false,
       navigationHelpButton: false,
       selectionIndicator: false,
-      skyAtmosphere: false,
+      skyAtmosphere: new Cesium.SkyAtmosphere(),
       creditContainer: document.createElement('div'),
     })
 
@@ -134,6 +158,19 @@ function GlobeViewer() {
 
     viewer.scene.globe.baseColor = GLOBE_BASE_COLOR
     viewer.scene.backgroundColor = DARK_BACKGROUND
+    viewer.scene.globe.enableLighting = false
+    viewer.scene.globe.showGroundAtmosphere = false
+    viewer.scene.skyAtmosphere!.show = false
+    
+    // Professional Bloom & Fog
+    viewer.scene.postProcessStages.bloom.enabled = true
+    viewer.scene.postProcessStages.bloom.uniforms.contrast = 1.2
+    viewer.scene.postProcessStages.bloom.uniforms.brightness = -0.1
+    viewer.scene.postProcessStages.bloom.uniforms.glowOnly = false
+
+    viewer.scene.fog.enabled = true
+    viewer.scene.fog.density = 0.0001
+    viewer.scene.fog.screenSpaceErrorFactor = 2.0
 
     viewer.scene.skyBox?.destroy()
     viewer.scene.skyBox = undefined as unknown as Cesium.SkyBox
@@ -164,14 +201,16 @@ function GlobeViewer() {
       new AircraftLayer(viewer),
       new MaritimeLayer(viewer),
       new SatelliteLayer(viewer),
+      new GroundStationLayer(viewer),
       new SensorConeLayer(viewer),
       new ConstellationLayer(viewer),
       new TrajectoryLayer(viewer),
       new RegionOverlayLayer(viewer),
       new EventMarkerLayer(viewer),
+      new CommunicationLayer(viewer),
     ]
 
-    const evLayer = layers[layers.length - 1] as EventMarkerLayer
+    const evLayer = layers.find(l => l.id === 'event-marker') as EventMarkerLayer
 
     layers.forEach((layer) => layer.load(allAssets))
     layersRef.current = layers
@@ -192,7 +231,7 @@ function GlobeViewer() {
     orbitalPathRef.current = orbits
 
     gridOverlayRef.current = new TacticalGridOverlay(viewer)
-    if (useAppStore.getState().gridOverlayVisible) {
+    if (useAppStore.getState().layerVisibility.tacticalGrid) {
       gridOverlayRef.current.show()
     }
 
@@ -209,11 +248,14 @@ function GlobeViewer() {
       const entityId = entity?.id ?? null
       const hoverAsset = entityId ? (assetMap.get(entityId) ?? null) : null
 
+      setHoveredAsset(hoverAsset as Asset | null)
+      layers.forEach(l => l.setHover?.(entityId))
+
       setTooltip({
         visible: hoverAsset !== null,
-        x: movement.position.x + 12,
-        y: movement.position.y - 8,
-        asset: hoverAsset,
+        x: movement.position.x,
+        y: movement.position.y,
+        asset: hoverAsset as Asset | null,
       })
 
       viewer.scene.canvas.style.cursor = hoverAsset ? 'pointer' : 'default'
@@ -304,12 +346,12 @@ function GlobeViewer() {
   useEffect(() => {
     const cone = sensorConeRef.current
     if (!cone) return
-    if (selectedAsset && selectedAsset.type === 'satellite' && sensorConeVisible) {
+    if (selectedAsset && selectedAsset.type === 'satellite' && sensorConesVisible) {
       cone.show(selectedAsset.id)
     } else {
       cone.hide()
     }
-  }, [selectedAsset, sensorConeVisible])
+  }, [selectedAsset, sensorConesVisible])
 
   useEffect(() => {
     const grid = coverageGridRef.current
@@ -482,31 +524,13 @@ function GlobeViewer() {
         })}
       </div>
       <AnimatePresence>
-        {tooltip.visible && tooltip.asset && tooltip.asset.type === 'satellite' && (
-          <SatelliteTooltip
-            key="satellite-tooltip"
-            asset={tooltip.asset as Satellite}
+        {tooltip.visible && tooltip.asset && (
+          <AssetHoverCard
+            key="asset-hover-card"
+            asset={tooltip.asset}
             x={tooltip.x}
             y={tooltip.y}
           />
-        )}
-        {tooltip.visible && tooltip.asset && tooltip.asset.type !== 'satellite' && (
-          <motion.div
-            key="asset-tooltip"
-            initial={{ opacity: 0, y: 3 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 3 }}
-            transition={{ duration: 0.1 }}
-            className="pointer-events-none absolute z-50 rounded-[2px] border border-border/60 bg-[#0d1117]/95 px-2.5 py-1.5 shadow-lg backdrop-blur-sm"
-            style={{ left: tooltip.x, top: tooltip.y }}
-          >
-            <p className="whitespace-nowrap text-[11px] font-medium text-foreground/90">
-              {tooltip.asset.name}
-            </p>
-            <p className="whitespace-nowrap text-[9px] uppercase tracking-wider text-muted-foreground/60">
-              {tooltip.asset.type.replace('-', ' ')}
-            </p>
-          </motion.div>
         )}
       </AnimatePresence>
     </div>

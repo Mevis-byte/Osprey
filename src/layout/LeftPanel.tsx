@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plane, Ship, Satellite, Radio, Activity, Share2 } from 'lucide-react'
+import { Search, Plane, Ship, Satellite, Radio, Activity, Share2, Layers } from 'lucide-react'
 import { useAppStore } from '@/store'
 import type { FeedEvent } from '@/types'
 import RegionalIntel from './RegionalIntel'
 import GraphWorkspace from '@/components/graph/GraphWorkspace'
+import { LayerControlPanel } from './LayerControlPanel'
 
 type ChipKey = 'aircraft' | 'maritime' | 'satellite' | 'signals'
 
@@ -25,6 +26,8 @@ function eventMatchesChip(event: FeedEvent, chip: ChipKey): boolean {
       return event.assetIds.some((id) => id.startsWith('SV'))
     case 'signals':
       return event.type === 'intel'
+    default:
+      return false
   }
 }
 
@@ -68,7 +71,7 @@ function FeedItem({ event, index }: { event: FeedEvent; index: number }) {
   )
 }
 
-type PanelTab = 'stream' | 'intel' | 'graph'
+type PanelTab = 'stream' | 'intel' | 'graph' | 'layers'
 
 function LeftPanel() {
   const feed = useAppStore((s) => s.feedData)
@@ -143,6 +146,18 @@ function LeftPanel() {
             <Share2 className="h-2.5 w-2.5" />
             Graph
           </button>
+          <button
+            type="button"
+            onClick={() => setTab('layers')}
+            className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
+              tab === 'layers'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            }`}
+          >
+            <Layers className="h-2.5 w-2.5" />
+            Layers
+          </button>
         </div>
 
         {tab === 'stream' && (
@@ -199,8 +214,12 @@ function LeftPanel() {
           <div className="h-full overflow-y-auto">
             <RegionalIntel />
           </div>
-        ) : (
+        ) : tab === 'graph' ? (
           <GraphWorkspace />
+        ) : (
+          <div className="h-full overflow-y-auto custom-scrollbar">
+            <LayerControlPanel />
+          </div>
         )}
       </div>
 

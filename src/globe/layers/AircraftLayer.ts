@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, Aircraft } from '@/types'
+import { MARKER_ICONS } from './label-styles'
 
 function isAircraft(asset: Asset): asset is Aircraft {
   return asset.type === 'fixed-wing' || asset.type === 'rotary-wing'
@@ -25,12 +26,21 @@ export class AircraftLayer extends BaseLayer {
         asset.altitude,
       )
 
+      const labelText = new Cesium.CallbackProperty(() => {
+        const isHovered = this.hoveredId === asset.id
+        const isSelected = this.highlightedId === asset.id
+        if (isHovered || isSelected) {
+          return `[ ${asset.callsign.toUpperCase()} ]\nALT: ${asset.altitude.toLocaleString()} FT\nSPD: ${asset.speed.toFixed(0)} KTS`
+        }
+        return asset.callsign || asset.name
+      }, false)
+
       const entity = this.viewer.entities.add({
         id: asset.id,
         name: asset.name,
         position,
-        point: this.createPoint(AIRCRAFT_COLOR),
-        label: this.createLabel(asset.name, {
+        billboard: this.createMarker(MARKER_ICONS.aircraft),
+        label: this.createLabel(labelText, {
           fillColor: AIRCRAFT_COLOR,
         }),
         properties: {

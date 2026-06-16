@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/store'
 import MissionDetail from './MissionDetail'
+import { OperationalDashboard } from './OperationalDashboard'
 import type { Asset, ThreatLevel, AssetStatus } from '@/types'
 import type { Aircraft, MaritimeAsset, Satellite } from '@/types'
 
@@ -156,19 +157,6 @@ function SatelliteMetadata({ asset }: { asset: Satellite }) {
   )
 }
 
-function EmptyState() {
-  return (
-    <div className="flex flex-1 items-center justify-center px-4">
-      <div className="text-center">
-        <p className="text-xs font-medium text-muted-foreground/60">Select an asset or mission</p>
-        <p className="mt-1 text-[10px] text-muted-foreground/40">
-          Click a marker or choose a mission
-        </p>
-      </div>
-    </div>
-  )
-}
-
 function TrackingControls({ asset }: { asset: Asset }) {
   const trackingAssetId = useAppStore((s) => s.trackingAssetId)
   const setTrackingAssetId = useAppStore((s) => s.setTrackingAssetId)
@@ -293,44 +281,42 @@ function RightPanel() {
   return (
     <aside className="flex flex-col border-l border-border bg-card">
       <div className="panel-header">
-        <h2 className="panel-title">
-          {selectedMission ? 'Mission Details' : 'Asset Details'}
+        <h2 className="panel-title uppercase tracking-[0.2em]">
+          {selectedMission ? 'Mission Detail' : selectedAsset ? 'Asset Intelligence' : 'Global Dashboard'}
         </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <AnimatePresence mode="wait">
           {selectedMission ? (
             <motion.div
               key={selectedMission.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.12 }}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.15 }}
             >
               <MissionDetail mission={selectedMission} onClose={() => setSelectedMission(null)} />
             </motion.div>
           ) : selectedAsset ? (
             <motion.div
               key={selectedAsset.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.12 }}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.15 }}
             >
               <AssetDetail asset={selectedAsset} />
             </motion.div>
           ) : (
             <motion.div
-              key="empty"
+              key="dashboard"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.12 }}
-              className="flex flex-1 items-center justify-center"
-              style={{ minHeight: 'calc(100% - 1px)' }}
+              transition={{ duration: 0.2 }}
             >
-              <EmptyState />
+              <OperationalDashboard />
             </motion.div>
           )}
         </AnimatePresence>
