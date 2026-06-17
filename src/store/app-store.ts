@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import type { Asset, Alert, FeedEvent, Geofence, GroundStation, Mission, ConstellationInfo, Region, OperationalMode } from '@/types'
+import type { Asset, Alert, FeedEvent, Geofence, GroundStation, Mission, ConstellationInfo, Region, OperationalMode, ProjectionMode } from '@/types'
 import type { AssetType, AssetStatus, ThreatLevel } from '@/types'
 import { constellations as constData } from '@/mock-data'
 import { geofences as gfData } from '@/mock-data'
@@ -104,6 +104,9 @@ export interface AppStore {
   setLayerVisibility: (visibility: Partial<LayerVisibility>) => void
   toggleLayer: (key: keyof LayerVisibility) => void
 
+  projectionMode: ProjectionMode
+  setProjectionMode: (mode: ProjectionMode) => void
+
   sidebarLeft: { width: number; mode: 'expanded' | 'compact' | 'hidden' }
   sidebarRight: { width: number; mode: 'expanded' | 'compact' | 'hidden' }
   setSidebarLeftWidth: (width: number) => void
@@ -161,6 +164,7 @@ export const useAppStore = create<AppStore>()(
         focusRequestId: null,
         sidebarLeft: { width: 360, mode: 'expanded' },
         sidebarRight: { width: 320, mode: 'expanded' },
+        projectionMode: 'globe',
 
         setSelectedAsset: (asset) => set({ selectedAsset: asset }),
         setHoveredAsset: (asset) => set({ hoveredAsset: asset }),
@@ -277,6 +281,8 @@ export const useAppStore = create<AppStore>()(
             current.mode === 'compact' ? 'hidden' : 'expanded'
           set({ sidebarRight: { ...current, mode: next } })
         },
+
+        setProjectionMode: (mode) => set({ projectionMode: mode }),
       }),
       { 
         name: 'osprey-store',
@@ -286,6 +292,7 @@ export const useAppStore = create<AppStore>()(
           simulationSpeed: state.simulationSpeed,
           sidebarLeft: state.sidebarLeft,
           sidebarRight: state.sidebarRight,
+          projectionMode: state.projectionMode,
         }),
       },
     ),

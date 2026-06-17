@@ -171,6 +171,7 @@ export interface Region {
 }
 
 export type GlobeViewMode = '3D' | '2D' | 'Columbus'
+export type ProjectionMode = 'globe' | 'flat' | 'space' | 'analytics'
 
 export interface ConstellationInfo {
   id: string

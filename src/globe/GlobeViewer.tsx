@@ -100,6 +100,7 @@ function GlobeViewer() {
   const setSelectedConstellationId = useAppStore((s) => s.setSelectedConstellationId)
   const setSelectedGeofenceId = useAppStore((s) => s.setSelectedGeofenceId)
   const constellations = useAppStore((s) => s.constellations)
+  const projectionMode = useAppStore((s) => s.projectionMode)
 
   const selectedId = useMemo(() => selectedAsset?.id ?? null, [selectedAsset])
 
@@ -496,6 +497,83 @@ function GlobeViewer() {
     }
     requestFocus(null)
   }, [focusRequestId, assetData, flyToAsset, setTrackingAssetId, requestFocus])
+
+  const modeVisibility: Record<string, Partial<Record<string, boolean>>> = {
+    globe: {},
+    flat: { satellites: false, groundStations: false, coverageRings: false, sensorCones: false, commLinks: false, dayNight: false, weather: false },
+    space: { aircraft: false, maritime: false, trails: false, regions: false, weather: false, geofences: false, dayNight: false },
+    analytics: { aircraft: false, maritime: false, satellites: false, groundStations: false, coverageRings: false, sensorCones: false, commLinks: false, tacticalGrid: false, dayNight: false, weather: false, trails: false, geofences: false },
+  }
+
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer) return
+
+    const scene = viewer.scene
+    const overrides = modeVisibility[projectionMode]
+
+    if (projectionMode === 'flat') {
+      if (scene.mode !== Cesium.SceneMode.SCENE2D) {
+        scene.morphTo2D(1.5)
+      }
+      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000
+      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 50000000
+    } else {
+      if (scene.mode !== Cesium.SceneMode.SCENE3D) {
+        scene.morphTo3D(1.5)
+      }
+      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000
+      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 50000000
+    }
+
+    if (projectionMode === 'space') {
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 40000000),
+        orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+        duration: 1.5,
+      })
+    }
+
+    if (projectionMode === 'analytics') {
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(0, 20, 35000000),
+        orientation: { heading: 0, pitch: -Math.PI / 3, roll: 0 },
+        duration: 1.5,
+      })
+    }
+
+    if (projectionMode === 'globe') {
+      if (!trackingAssetId) {
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(0, 20, 25000000),
+          duration: 1.5,
+        })
+      }
+    }
+
+    for (const [layerId, visible] of Object.entries(overrides)) {
+      const layer = layersRef.current.find((l) => l.id === layerId)
+      if (layer) layer.setVisible(visible ?? true)
+    }
+
+    const heatmapMgr = heatmapManagerRef.current
+    if (heatmapMgr) {
+      if (projectionMode === 'analytics') {
+        heatmapMgr.setVisible('assetDensity', true)
+        heatmapMgr.setVisible('alertDensity', true)
+        heatmapMgr.setVisible('missionActivity', true)
+        const state = useAppStore.getState()
+        heatmapMgr.refreshAll(state)
+      } else {
+        const state = useAppStore.getState()
+        for (const key of ['assetDensity', 'alertDensity', 'missionActivity'] as const) {
+          heatmapMgr.setVisible(key, state.heatmapLayers[key])
+        }
+      }
+    }
+
+    viewer.scene.requestRender()
+  }, [projectionMode, trackingAssetId])
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden" style={{ background: '#0a0c12' }}>

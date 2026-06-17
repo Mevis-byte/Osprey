@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Satellite, Crosshair, Bell, Clock } from 'lucide-react'
 import { useAppStore } from '@/store'
+import { ViewModeSelector } from '@/components/ViewModeSelector'
 
 function useUtcClock() {
   const [time, setTime] = useState(new Date().toISOString().slice(11, 19))
@@ -77,6 +78,10 @@ function TopBar() {
             <option value="tactical-operations">Tactical Operations</option>
           </select>
         </div>
+
+        <span className="h-3 w-px bg-white/10" />
+
+        <ViewModeSelector />
 
         <span className="h-3 w-px bg-white/10" />
 
