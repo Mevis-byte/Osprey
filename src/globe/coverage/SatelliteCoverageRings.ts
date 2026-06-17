@@ -4,10 +4,10 @@ import { useAppStore } from '@/store'
 const EARTH_RADIUS = 6371000
 
 const RING_CONFIGS = [
-  { pct: 0.25, alpha: 0.45 },
-  { pct: 0.50, alpha: 0.32 },
-  { pct: 0.75, alpha: 0.20 },
-  { pct: 1.00, alpha: 0.12 },
+  { pct: 0.25, alpha: 0.20 },
+  { pct: 0.50, alpha: 0.14 },
+  { pct: 0.75, alpha: 0.09 },
+  { pct: 1.00, alpha: 0.05 },
 ]
 
 const RING_COLOR = Cesium.Color.fromCssColorString('#22d3ee')
@@ -42,6 +42,7 @@ export class SatelliteCoverageRings {
           fill: false,
           outline: true,
           outlineColor: RING_COLOR.withAlpha(alpha),
+          outlineWidth: 1,
         },
         show: false,
       })

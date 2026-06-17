@@ -50,17 +50,17 @@ export class CommunicationLayer extends BaseLayer {
               return [stationPos, mid, satellitePos]
             }, false),
             width: new Cesium.CallbackProperty(() => {
-              return this.isPathActive(station.id, satelliteId) ? 2.2 : 1.2
+              return this.isPathActive(station.id, satelliteId) ? 1.5 : 1
             }, false),
-            material: new Cesium.PolylineDashMaterialProperty({
-              color: new Cesium.CallbackProperty(() => {
-                const isSelected = this.isPathActive(station.id, satelliteId)
-                const baseColor = isSelected ? LINK_SELECTED_COLOR : LINK_COLOR
-                return baseColor.withAlpha(isSelected ? 0.9 : 0.3)
-              }, false),
-              dashLength: 16,
-              dashPattern: 255,
-            }),
+              material: new Cesium.PolylineDashMaterialProperty({
+                color: new Cesium.CallbackProperty(() => {
+                  const isSelected = this.isPathActive(station.id, satelliteId)
+                  const baseColor = isSelected ? LINK_SELECTED_COLOR : LINK_COLOR
+                  return baseColor.withAlpha(isSelected ? 0.7 : 0.18)
+                }, false),
+                dashLength: 12,
+                dashPattern: 255,
+              }),
           },
           show: true,
         })

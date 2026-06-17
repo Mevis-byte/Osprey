@@ -88,11 +88,11 @@ export abstract class BaseLayer implements Layer {
       const next = this.entities.find((e) => e.id === entityId)
       if (next?.billboard) {
         const b = next.billboard as unknown as Record<string, unknown>
-        b.scale = 0.7
-        b.color = Cesium.Color.fromCssColorString('#60a5fa')
+        b.scale = 0.65
+        b.color = Cesium.Color.fromCssColorString('#93c5fd')
       }
       if (next?.label) {
-        next.label.scale = 1.1 as unknown as Cesium.Property
+        next.label.scale = 1.05 as unknown as Cesium.Property
       }
     }
   }
@@ -112,30 +112,30 @@ export abstract class BaseLayer implements Layer {
     if (entityId) {
       const next = this.entities.find((e) => e.id === entityId)
       if (next?.label) {
-        next.label.scale = 1.15 as unknown as Cesium.Property
+        next.label.scale = 1.08 as unknown as Cesium.Property
       }
     }
   }
 
   protected createPoint(color: Cesium.Color): Cesium.PointGraphics {
     return new Cesium.PointGraphics({
-      pixelSize: 10,
+      pixelSize: 8,
       color,
       outlineColor: Cesium.Color.WHITE,
-      outlineWidth: 2.0,
+      outlineWidth: 1.5,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.2, 2.5e7, 0.6),
+      scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.0, 2.5e7, 0.5),
     })
   }
 
   protected createMarker(image: string): Cesium.BillboardGraphics {
     return new Cesium.BillboardGraphics({
       image,
-      scale: 0.7,
+      scale: 0.55,
       horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
       verticalOrigin: Cesium.VerticalOrigin.CENTER,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.2, 2.5e7, 0.6),
+      scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.0, 2.5e7, 0.5),
       heightReference: Cesium.HeightReference.NONE,
       rotation: 0,
       alignedAxis: Cesium.Cartesian3.UNIT_Z,
@@ -145,6 +145,7 @@ export abstract class BaseLayer implements Layer {
   protected createLabel(text: string | Cesium.Property, options: Partial<Parameters<typeof createLabelGraphics>[0]> = {}): Cesium.LabelGraphics {
     return createLabelGraphics({
       text,
+      showBackground: true,
       ...options
     })
   }

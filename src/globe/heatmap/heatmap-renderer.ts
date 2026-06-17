@@ -14,8 +14,8 @@ export interface RenderOptions {
 const DEFAULT_OPTIONS: RenderOptions = {
   width: 1024,
   height: 512,
-  radius: 40,
-  maxIntensity: 8,
+  radius: 30,
+  maxIntensity: 5,
 }
 
 function latLonToPixel(
@@ -33,11 +33,11 @@ function latLonToPixel(
 
 const COLOR_STOPS: [number, number, number, number, number][] = [
   [0.0, 0, 0, 255, 0],
-  [0.15, 0, 80, 255, 60],
-  [0.35, 0, 200, 255, 140],
-  [0.55, 0, 255, 80, 200],
-  [0.75, 255, 255, 0, 230],
-  [1.0, 255, 30, 0, 255],
+  [0.20, 0, 60, 220, 35],
+  [0.40, 0, 160, 220, 90],
+  [0.60, 0, 220, 60, 140],
+  [0.80, 200, 200, 0, 170],
+  [1.0, 200, 30, 0, 190],
 ]
 
 function heatmapColor(value: number): [number, number, number, number] {
@@ -79,9 +79,9 @@ export function renderHeatmap(
     ) continue
 
     const g = ctx.createRadialGradient(x, y, 0, x, y, opts.radius)
-    g.addColorStop(0, `rgba(255,255,255,${weight})`)
-    g.addColorStop(0.3, `rgba(255,255,255,${weight * 0.5})`)
-    g.addColorStop(0.6, `rgba(255,255,255,${weight * 0.15})`)
+    g.addColorStop(0, `rgba(255,255,255,${weight * 0.7})`)
+    g.addColorStop(0.4, `rgba(255,255,255,${weight * 0.35})`)
+    g.addColorStop(0.7, `rgba(255,255,255,${weight * 0.10})`)
     g.addColorStop(1, 'rgba(255,255,255,0)')
     ctx.fillStyle = g
     ctx.beginPath()

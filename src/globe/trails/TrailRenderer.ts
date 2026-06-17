@@ -66,8 +66,8 @@ export class TrailRenderer {
         name: `${id}-trail`,
         polyline: {
           positions,
-          width: 2,
-          material: color.withAlpha(0.55),
+          width: 1.5,
+          material: color.withAlpha(0.40),
           clampToGround: true,
         },
       })
@@ -102,7 +102,7 @@ export class TrailRenderer {
         polyline: {
           positions,
           width: 1,
-          material: color.withAlpha(0.3),
+          material: color.withAlpha(0.18),
           clampToGround: true,
         },
       })

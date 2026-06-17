@@ -1,13 +1,10 @@
 import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, Satellite } from '@/types'
-import { MARKER_ICONS } from './label-styles'
 
 function isSatellite(asset: Asset): asset is Satellite {
   return asset.type === 'satellite'
 }
-
-const SATELLITE_COLOR = Cesium.Color.fromCssColorString('#fbbf24')
 
 export class SatelliteLayer extends BaseLayer {
   constructor(viewer: Cesium.Viewer) {
@@ -32,16 +29,24 @@ export class SatelliteLayer extends BaseLayer {
         if (isHovered || isSelected) {
           return `[ ${asset.name.toUpperCase()} ]\nALT: ${(asset.altitude / 1000).toFixed(0)} KM\nSPD: ${asset.speed.toFixed(1)} KM/S`
         }
-        return asset.name
+        return ''
       }, false)
 
       const entity = this.viewer.entities.add({
         id: asset.id,
         name: asset.name,
         position,
-        billboard: this.createMarker(MARKER_ICONS.satellite),
+        point: new Cesium.PointGraphics({
+          pixelSize: 14,
+          color: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 1,
+          scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.3, 3.0e7, 0.3),
+          disableDepthTestDistance: 0,
+        }),
         label: this.createLabel(labelText, {
-          fillColor: SATELLITE_COLOR,
+          fillColor: Cesium.Color.WHITE,
+          showBackground: false,
         }),
         properties: {
           type: asset.type,
@@ -54,6 +59,28 @@ export class SatelliteLayer extends BaseLayer {
       })
 
       this.entities.push(entity)
+    }
+  }
+
+  setHighlight(entityId: string | null): void {
+    if (this.highlightedId === entityId) return
+
+    if (this.highlightedId) {
+      const prev = this.entities.find((e) => e.id === this.highlightedId)
+      if (prev?.point) {
+        prev.point.color = Cesium.Color.WHITE as unknown as Cesium.Property
+        prev.point.outlineColor = Cesium.Color.BLACK as unknown as Cesium.Property
+      }
+    }
+
+    this.highlightedId = entityId
+
+    if (entityId) {
+      const next = this.entities.find((e) => e.id === entityId)
+      if (next?.point) {
+        next.point.color = Cesium.Color.WHITE as unknown as Cesium.Property
+        next.point.outlineColor = Cesium.Color.fromCssColorString('#22c55e') as unknown as Cesium.Property
+      }
     }
   }
 }

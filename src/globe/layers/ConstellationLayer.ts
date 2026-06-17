@@ -61,7 +61,7 @@ export class ConstellationLayer extends BaseLayer {
       const islMaterials: Cesium.ColorMaterialProperty[] = []
       for (let i = 0; i < info.satelliteIds.length; i++) {
         for (let j = i + 1; j < info.satelliteIds.length; j++) {
-          const mat = new Cesium.ColorMaterialProperty(color.withAlpha(0.15))
+          const mat = new Cesium.ColorMaterialProperty(color.withAlpha(0.10))
           const entity = this.viewer.entities.add({
             polyline: {
               positions: [],
@@ -81,7 +81,7 @@ export class ConstellationLayer extends BaseLayer {
           position: Cesium.Cartesian3.fromDegrees(sat.longitude, sat.latitude, sat.altitude),
           point: {
             pixelSize: 14,
-            color: color.withAlpha(0.6),
+            color: color.withAlpha(0.45),
             outlineColor: color,
             outlineWidth: 2,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
@@ -114,9 +114,9 @@ export class ConstellationLayer extends BaseLayer {
             semiMajorAxis: radius,
             height: 0,
             fill: true,
-            material: color.withAlpha(0.04),
+            material: color.withAlpha(0.03),
             outline: true,
-            outlineColor: color.withAlpha(0.15),
+            outlineColor: color.withAlpha(0.10),
             outlineWidth: 1,
           },
           show: false,
@@ -142,7 +142,7 @@ export class ConstellationLayer extends BaseLayer {
       const members = cs.info.satelliteIds.map((id) => assetMap.get(id)).filter(Boolean) as Asset[]
 
       const range = islRange(cs.info.type)
-      const alpha = isSelected ? 0.7 : 0.15
+      const alpha = isSelected ? 0.5 : 0.10
       const width = isSelected ? WIDTH_SELECTED : WIDTH_UNSELECTED
 
       let linkIdx = 0

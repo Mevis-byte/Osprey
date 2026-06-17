@@ -58,9 +58,9 @@ export class RegionOverlayLayer extends BaseLayer {
       polygon: {
         hierarchy: new Cesium.PolygonHierarchy(positions),
         fill: true,
-        material: color.withAlpha(0.06),
+        material: color.withAlpha(0.04),
         outline: true,
-        outlineColor: color.withAlpha(0.3),
+        outlineColor: color.withAlpha(0.18),
         outlineWidth: 1,
         height: 0,
       },

@@ -4,8 +4,8 @@ import { useAppStore } from '@/store'
 import type { Asset, FeedEvent, Alert } from '@/types'
 
 const EVENT_LIFETIME_MS = 10000
-const FADE_IN_MS = 600
-const FADE_OUT_MS = 800
+const FADE_IN_MS = 400
+const FADE_OUT_MS = 600
 
 const SEVERITY_COLORS: Record<string, string> = {
   low: '#22c55e',
@@ -129,8 +129,8 @@ export class EventMarkerLayer extends BaseLayer {
       point: {
         pixelSize: 0,
         color: color,
-        outlineColor: Cesium.Color.WHITE.withAlpha(0.6),
-        outlineWidth: 2,
+        outlineColor: Cesium.Color.WHITE.withAlpha(0.5),
+        outlineWidth: 1.5,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
     })
@@ -141,20 +141,20 @@ export class EventMarkerLayer extends BaseLayer {
         fillColor: color,
         horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
-        pixelOffset: new Cesium.Cartesian2(12, 0),
+        pixelOffset: new Cesium.Cartesian2(10, 0),
       }),
     })
 
     const ring = this.viewer.entities.add({
       position: pos,
       ellipse: {
-        semiMinorAxis: 2000,
-        semiMajorAxis: 2000,
+        semiMinorAxis: 1500,
+        semiMajorAxis: 1500,
         height: 0,
         fill: true,
-        material: color.withAlpha(0.15),
+        material: color.withAlpha(0.10),
         outline: true,
-        outlineColor: color.withAlpha(0.4),
+        outlineColor: color.withAlpha(0.25),
         outlineWidth: 1,
       },
     })
@@ -177,22 +177,22 @@ export class EventMarkerLayer extends BaseLayer {
     if (age < FADE_IN_MS) {
       const t = age / FADE_IN_MS
       const ease = 1 - (1 - t) ** 2
-      m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 10)
+      m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 8)
       m.label.label!.showBackground = new Cesium.ConstantProperty(true)
-      const bg = Cesium.Color.fromCssColorString('#0f172a').withAlpha(0.7 * ease)
+      const bg = Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.65 * ease)
       m.label.label!.backgroundColor = bg as unknown as Cesium.Property
     }
  else if (remaining < FADE_OUT_MS) {
       const t = remaining / FADE_OUT_MS
       const ease = t * t
-      m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 10)
+      m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 8)
       if (ease < 0.05) {
         m.point.show = false
         m.label.show = false
         m.ring.show = false
       }
     } else {
-      m.point.point!.pixelSize = new Cesium.ConstantProperty(10)
+      m.point.point!.pixelSize = new Cesium.ConstantProperty(8)
     }
   }
 

@@ -111,10 +111,48 @@ function GlobeViewer() {
     })
   }, [layerVisibility])
 
+  const flyToSatellite = useCallback((asset: Asset, onComplete?: () => void) => {
+    const viewer = viewerRef.current
+    if (!viewer) {
+      onComplete?.()
+      return
+    }
+
+    const R = 6371000
+    const coverageAngle = Math.acos(R / (R + asset.altitude))
+    const coverageRadius = R * coverageAngle
+
+    const groundPos = Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, 0)
+    const satPos = Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, asset.altitude)
+    const center = new Cesium.Cartesian3()
+    Cesium.Cartesian3.lerp(groundPos, satPos, 0.3, center)
+
+    const radius = Math.min(coverageRadius * 0.6, 2500000)
+    const range = Math.max(Math.min(asset.altitude * 2.5, 3000000), 1500000)
+
+    viewer.camera.flyToBoundingSphere(
+      new Cesium.BoundingSphere(center, radius),
+      {
+        offset: new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(asset.heading + 180),
+          Cesium.Math.toRadians(-35),
+          range,
+        ),
+        duration: 1.5,
+        complete: onComplete,
+      },
+    )
+  }, [])
+
   const flyToAsset = useCallback((asset: Asset, onComplete?: () => void) => {
     const viewer = viewerRef.current
     if (!viewer) {
       onComplete?.()
+      return
+    }
+
+    if (asset.type === 'satellite') {
+      flyToSatellite(asset, onComplete)
       return
     }
 
@@ -135,7 +173,7 @@ function GlobeViewer() {
       duration: 1.2,
       complete: onComplete,
     })
-  }, [])
+  }, [flyToSatellite])
 
   useEffect(() => {
     const container = containerRef.current
@@ -164,21 +202,25 @@ function GlobeViewer() {
     viewer.scene.globe.baseColor = GLOBE_BASE_COLOR
     viewer.scene.backgroundColor = DARK_BACKGROUND
     viewer.scene.globe.enableLighting = false
-    viewer.scene.globe.showGroundAtmosphere = false
-    viewer.scene.skyAtmosphere!.show = false
+    viewer.scene.globe.showGroundAtmosphere = true
+    viewer.scene.skyAtmosphere!.show = true
+    viewer.scene.skyAtmosphere!.brightnessShift = 0.2
+    viewer.scene.skyAtmosphere!.hueShift = -0.1
+    viewer.scene.skyAtmosphere!.saturationShift = 0.3
     
-    // Professional Bloom & Fog
+    // Subtle atmosphere — keep professional, avoid neon glow
     viewer.scene.postProcessStages.bloom.enabled = true
-    viewer.scene.postProcessStages.bloom.uniforms.contrast = 1.2
-    viewer.scene.postProcessStages.bloom.uniforms.brightness = -0.1
+    viewer.scene.postProcessStages.bloom.uniforms.contrast = 1.0
+    viewer.scene.postProcessStages.bloom.uniforms.brightness = 0.0
     viewer.scene.postProcessStages.bloom.uniforms.glowOnly = false
 
     viewer.scene.fog.enabled = true
-    viewer.scene.fog.density = 0.0001
-    viewer.scene.fog.screenSpaceErrorFactor = 2.0
+    viewer.scene.fog.density = 0.00005
+    viewer.scene.fog.screenSpaceErrorFactor = 1.5
 
     viewer.scene.skyBox?.destroy()
     viewer.scene.skyBox = undefined as unknown as Cesium.SkyBox
+    if (viewer.scene.moon) viewer.scene.moon.show = false
 
     const controller = viewer.scene.screenSpaceCameraController
     controller.minimumZoomDistance = 1000
@@ -267,6 +309,8 @@ function GlobeViewer() {
       viewer.scene.canvas.style.cursor = hoverAsset ? 'pointer' : 'default'
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
 
+    let clickTimer: ReturnType<typeof setTimeout> | null = null
+
     handler.setInputAction((movement: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
       const pick = viewer.scene.pick(movement.position)
       const entity = pick?.id instanceof Cesium.Entity ? pick.id : null
@@ -275,6 +319,7 @@ function GlobeViewer() {
 
       const geofenceId = entity?.properties?.geofenceId?.getValue() ?? null
       if (geofenceId && !asset) {
+        if (clickTimer) clearTimeout(clickTimer)
         const gfLayer = layers.find(l => l.id === 'geofences') as GeofenceLayer | undefined
         if (gfLayer) {
           gfLayer.setSelectedGeofence(geofenceId)
@@ -282,6 +327,57 @@ function GlobeViewer() {
         }
         return
       }
+
+      if (clickTimer) clearTimeout(clickTimer)
+
+      clickTimer = setTimeout(() => {
+        if (asset) {
+          selectedIdRef.current = entityId
+          layers.forEach((l) => l.setHighlight(entityId))
+          layers.forEach((l) => l.setSelectedAsset?.(asset))
+          setSelectedAsset(asset)
+          setSelectedConstellationId(null)
+          setSelectedGeofenceId(null)
+          setTrackingAssetId(null)
+          setTooltip((prev) => ({ ...prev, visible: false }))
+        } else if (entityId && (entityId.startsWith('event-') || entityId.startsWith('alert-'))) {
+          const targetAssetId = evLayer.getAssetIdForEntity(entityId)
+          if (targetAssetId) {
+            const targetAsset = assetMap.get(targetAssetId)
+            if (targetAsset) {
+              selectedIdRef.current = targetAssetId
+              layers.forEach((l) => l.setHighlight(targetAssetId))
+              layers.forEach((l) => l.setSelectedAsset?.(targetAsset))
+              setSelectedAsset(targetAsset)
+              setSelectedConstellationId(null)
+              setSelectedGeofenceId(null)
+              setTrackingAssetId(null)
+              setTooltip((prev) => ({ ...prev, visible: false }))
+            }
+          }
+        } else if (selectedIdRef.current !== null) {
+          selectedIdRef.current = null
+          layers.forEach((l) => l.setHighlight(null))
+          layers.forEach((l) => l.setSelectedAsset?.(null))
+          setSelectedAsset(null)
+          setSelectedConstellationId(null)
+          setSelectedGeofenceId(null)
+          setTrackingAssetId(null)
+        }
+        clickTimer = null
+      }, 250)
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+
+    handler.setInputAction((movement: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+      if (clickTimer) {
+        clearTimeout(clickTimer)
+        clickTimer = null
+      }
+
+      const pick = viewer.scene.pick(movement.position)
+      const entity = pick?.id instanceof Cesium.Entity ? pick.id : null
+      const entityId = entity?.id ?? null
+      const asset = entityId ? (assetMap.get(entityId) ?? null) : null
 
       if (asset) {
         selectedIdRef.current = entityId
@@ -291,10 +387,10 @@ function GlobeViewer() {
         setSelectedConstellationId(null)
         setSelectedGeofenceId(null)
         setTrackingAssetId(null)
+        setTooltip((prev) => ({ ...prev, visible: false }))
         flyToAsset(asset, () => {
           setTrackingAssetId(asset.id)
         })
-        setTooltip((prev) => ({ ...prev, visible: false }))
       } else if (entityId && (entityId.startsWith('event-') || entityId.startsWith('alert-'))) {
         const targetAssetId = evLayer.getAssetIdForEntity(entityId)
         if (targetAssetId) {
@@ -307,22 +403,14 @@ function GlobeViewer() {
             setSelectedConstellationId(null)
             setSelectedGeofenceId(null)
             setTrackingAssetId(null)
+            setTooltip((prev) => ({ ...prev, visible: false }))
             flyToAsset(targetAsset, () => {
               setTrackingAssetId(targetAsset.id)
             })
-            setTooltip((prev) => ({ ...prev, visible: false }))
           }
         }
-      } else if (selectedIdRef.current !== null) {
-        selectedIdRef.current = null
-        layers.forEach((l) => l.setHighlight(null))
-        layers.forEach((l) => l.setSelectedAsset?.(null))
-        setSelectedAsset(null)
-        setSelectedConstellationId(null)
-        setSelectedGeofenceId(null)
-        setTrackingAssetId(null)
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+    }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
 
     viewer.scene.requestRender()
 
@@ -448,7 +536,7 @@ function GlobeViewer() {
     if (!viewer || !trackingAssetId) return
 
     let smoothTarget: Cesium.Cartesian3 | null = null
-    let smoothHeight = 15000
+    let smoothHeading = 0
     const SMOOTHING = 3.0
 
     const removeListener = viewer.scene.preRender.addEventListener(() => {
@@ -456,12 +544,16 @@ function GlobeViewer() {
       const asset = assets.find((a) => a.id === trackingAssetId)
       if (!asset) return
 
-      const rawTarget = Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, 0)
-      const targetHeight = Math.max(asset.altitude * 0.4, 15000)
+      const rawTarget = Cesium.Cartesian3.fromDegrees(
+        asset.longitude,
+        asset.latitude,
+        asset.altitude * 0.4,
+      )
+      const range = Math.max(Math.min(asset.altitude * 2.5, 3000000), 1500000)
 
       if (!smoothTarget) {
         smoothTarget = rawTarget.clone()
-        smoothHeight = targetHeight
+        smoothHeading = asset.heading
         return
       }
 
@@ -470,13 +562,19 @@ function GlobeViewer() {
 
       const lerped = new Cesium.Cartesian3()
       Cesium.Cartesian3.lerp(smoothTarget, rawTarget, t, lerped)
-      smoothTarget = lerped.clone()
-      smoothHeight += (targetHeight - smoothHeight) * t
+      smoothTarget = lerped
+
+      const targetHeadingRad = Cesium.Math.toRadians(asset.heading)
+      const currentHeadingRad = Cesium.Math.toRadians(smoothHeading)
+      let headingDiff = targetHeadingRad - currentHeadingRad
+      if (headingDiff > Math.PI) headingDiff -= 2 * Math.PI
+      if (headingDiff < -Math.PI) headingDiff += 2 * Math.PI
+      smoothHeading = Cesium.Math.toDegrees(currentHeadingRad + headingDiff * t)
 
       viewer.camera.lookAt(smoothTarget, new Cesium.HeadingPitchRange(
-        Cesium.Math.toRadians(0),
+        Cesium.Math.toRadians(smoothHeading + 180),
         Cesium.Math.toRadians(-35),
-        smoothHeight,
+        range,
       ))
     })
 
