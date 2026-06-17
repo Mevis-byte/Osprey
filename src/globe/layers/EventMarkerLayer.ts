@@ -2,6 +2,7 @@ import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import { useAppStore } from '@/store'
 import type { Asset, FeedEvent, Alert } from '@/types'
+import { EVENT_LABEL_DISTANCE } from './label-styles'
 
 const EVENT_LIFETIME_MS = 10000
 const FADE_IN_MS = 400
@@ -142,6 +143,7 @@ export class EventMarkerLayer extends BaseLayer {
         horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
         pixelOffset: new Cesium.Cartesian2(10, 0),
+        distanceDisplayCondition: EVENT_LABEL_DISTANCE,
       }),
     })
 

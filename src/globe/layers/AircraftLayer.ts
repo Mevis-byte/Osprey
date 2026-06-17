@@ -1,7 +1,7 @@
 import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, Aircraft } from '@/types'
-import { MARKER_ICONS } from './label-styles'
+import { MARKER_ICONS, AIRCRAFT_LABEL_DISTANCE } from './label-styles'
 
 function isAircraft(asset: Asset): asset is Aircraft {
   return asset.type === 'fixed-wing' || asset.type === 'rotary-wing'
@@ -42,6 +42,7 @@ export class AircraftLayer extends BaseLayer {
         billboard: this.createMarker(MARKER_ICONS.aircraft),
         label: this.createLabel(labelText, {
           fillColor: AIRCRAFT_COLOR,
+          distanceDisplayCondition: AIRCRAFT_LABEL_DISTANCE,
         }),
         properties: {
           type: asset.type,

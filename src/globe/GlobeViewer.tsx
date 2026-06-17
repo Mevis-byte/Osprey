@@ -235,6 +235,9 @@ function GlobeViewer() {
       { eventType: Cesium.CameraEventType.LEFT_DRAG, modifier: Cesium.KeyboardEventModifier.CTRL },
     ]
     controller.enableCollisionDetection = true
+    controller.inertiaSpin = 0.5
+    controller.inertiaTranslate = 0.5
+    controller.inertiaZoom = 0.4
 
     viewer.camera.setView({
       destination: Cesium.Cartesian3.fromDegrees(0, 20, 25000000),
@@ -580,6 +583,7 @@ function GlobeViewer() {
 
     return () => {
       removeListener()
+      viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY)
       smoothTarget = null
     }
   }, [trackingAssetId])

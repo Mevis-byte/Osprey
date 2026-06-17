@@ -38,14 +38,19 @@ export abstract class BaseLayer implements Layer {
 
   abstract load(assets: Asset[]): void
 
+  private _scratchPosition = new Cesium.Cartesian3()
+
   updatePositions(assets: Asset[]): void {
     const map = new Map(assets.map((a) => [a.id, a]))
     for (const entity of this.entities) {
       const asset = map.get(entity.id!)
       if (asset) {
-        entity.position = new Cesium.ConstantPositionProperty(
-          Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, asset.altitude),
-        )
+        const pos = Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, asset.altitude, undefined, this._scratchPosition)
+        if (entity.position instanceof Cesium.ConstantPositionProperty) {
+          entity.position.setValue(pos)
+        } else {
+          entity.position = new Cesium.ConstantPositionProperty(pos.clone())
+        }
         if (entity.billboard) {
           if ('heading' in asset) {
             entity.billboard.rotation = Cesium.Math.toRadians(360 - asset.heading) as unknown as Cesium.Property
@@ -117,7 +122,7 @@ export abstract class BaseLayer implements Layer {
     }
   }
 
-  protected createPoint(color: Cesium.Color): Cesium.PointGraphics {
+  protected createPoint(color: Cesium.Color, distanceCondition?: Cesium.DistanceDisplayCondition): Cesium.PointGraphics {
     return new Cesium.PointGraphics({
       pixelSize: 8,
       color,
@@ -125,10 +130,11 @@ export abstract class BaseLayer implements Layer {
       outlineWidth: 1.5,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
       scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.0, 2.5e7, 0.5),
+      distanceDisplayCondition: distanceCondition,
     })
   }
 
-  protected createMarker(image: string): Cesium.BillboardGraphics {
+  protected createMarker(image: string, distanceCondition?: Cesium.DistanceDisplayCondition): Cesium.BillboardGraphics {
     return new Cesium.BillboardGraphics({
       image,
       scale: 0.55,
@@ -139,6 +145,7 @@ export abstract class BaseLayer implements Layer {
       heightReference: Cesium.HeightReference.NONE,
       rotation: 0,
       alignedAxis: Cesium.Cartesian3.UNIT_Z,
+      distanceDisplayCondition: distanceCondition,
     })
   }
 

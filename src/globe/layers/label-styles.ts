@@ -5,6 +5,11 @@ export const LABEL_STYLE = Cesium.LabelStyle.FILL
 export const LABEL_FILL_COLOR = Cesium.Color.WHITE
 
 export const LABEL_DISTANCE_DISPLAY_CONDITION = new Cesium.DistanceDisplayCondition(0, 4.0e7)
+export const SATELLITE_LABEL_DISTANCE = new Cesium.DistanceDisplayCondition(0, 3.0e7)
+export const AIRCRAFT_LABEL_DISTANCE = new Cesium.DistanceDisplayCondition(0, 3.0e6)
+export const MARITIME_LABEL_DISTANCE = new Cesium.DistanceDisplayCondition(0, 3.0e6)
+export const STATION_LABEL_DISTANCE = new Cesium.DistanceDisplayCondition(0, 5.0e6)
+export const EVENT_LABEL_DISTANCE = new Cesium.DistanceDisplayCondition(0, 2.0e6)
 
 export const LABEL_SCALE_BY_DISTANCE = new Cesium.NearFarScalar(
   1.0e5, 1.0,
@@ -22,6 +27,7 @@ export function createLabelGraphics(options: {
   fillColor?: Cesium.Color
   scaleByDistance?: Cesium.NearFarScalar
   showBackground?: boolean
+  distanceDisplayCondition?: Cesium.DistanceDisplayCondition
 }): Cesium.LabelGraphics {
   return new Cesium.LabelGraphics({
     text: options.text,
@@ -33,7 +39,7 @@ export function createLabelGraphics(options: {
     pixelOffset: options.pixelOffset ?? new Cesium.Cartesian2(8, 0),
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
     scaleByDistance: options.scaleByDistance ?? LABEL_SCALE_BY_DISTANCE,
-    distanceDisplayCondition: LABEL_DISTANCE_DISPLAY_CONDITION,
+    distanceDisplayCondition: options.distanceDisplayCondition ?? LABEL_DISTANCE_DISPLAY_CONDITION,
     showBackground: options.showBackground ?? true,
     backgroundColor: LABEL_BACKGROUND_COLOR,
     backgroundPadding: LABEL_BACKGROUND_PADDING,

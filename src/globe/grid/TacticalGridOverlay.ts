@@ -19,22 +19,31 @@ function letter(i: number): string {
   return String.fromCharCode(65 + i)
 }
 
+const _scratchLineColor = Cesium.Color.LIMEGREEN.clone()
+const _scratchMajorColor = Cesium.Color.LIMEGREEN.clone()
+const _scratchLabelColor = Cesium.Color.LIMEGREEN.clone()
+const _sharedLineMat = new Cesium.ColorMaterialProperty(_scratchLineColor)
+const _sharedMajorMat = new Cesium.ColorMaterialProperty(_scratchMajorColor)
+Cesium.Color.LIMEGREEN.withAlpha(LABEL_ALPHA, _scratchLabelColor)
+
 export class TacticalGridOverlay {
   private viewer: Cesium.Viewer
   private entities: Cesium.Entity[] = []
-  private entityAlphas: number[] = []
   private removeListener: (() => void) | null = null
   private visible = false
   private currentFade = 0
 
   constructor(viewer: Cesium.Viewer) {
     this.viewer = viewer
+    this.buildGrid()
   }
 
   show(): void {
     if (this.visible) return
     this.visible = true
-    this.buildGrid()
+    for (const entity of this.entities) {
+      entity.show = true
+    }
     this.removeListener = this.viewer.scene.preRender.addEventListener(() => {
       this.tick()
     })
@@ -48,15 +57,17 @@ export class TacticalGridOverlay {
       this.removeListener = null
     }
     for (const entity of this.entities) {
-      this.viewer.entities.remove(entity)
+      entity.show = false
     }
-    this.entities = []
-    this.entityAlphas = []
     this.currentFade = 0
   }
 
   destroy(): void {
     this.hide()
+    for (const entity of this.entities) {
+      this.viewer.entities.remove(entity)
+    }
+    this.entities = []
   }
 
   private buildGrid(): void {
@@ -68,7 +79,6 @@ export class TacticalGridOverlay {
   private buildLatLines(): void {
     for (let lat = -80; lat <= 80; lat += LINE_SPACING_DEG) {
       const isMajor = lat % MAJOR_SPACING_DEG === 0
-      const alpha = isMajor ? MAJOR_LINE_ALPHA : LINE_BASE_ALPHA
 
       const positions: Cesium.Cartesian3[] = []
       for (let j = 0; j <= NUM_LAT_SEGMENTS; j++) {
@@ -76,24 +86,20 @@ export class TacticalGridOverlay {
         positions.push(Cesium.Cartesian3.fromDegrees(lon, lat, 0))
       }
 
-      const entity = this.viewer.entities.add({
+      this.entities.push(this.viewer.entities.add({
+        show: false,
         polyline: {
           positions,
           width: isMajor ? 1.5 : 1,
-          material: new Cesium.ColorMaterialProperty(
-            Cesium.Color.LIMEGREEN.withAlpha(alpha),
-          ),
+          material: isMajor ? _sharedMajorMat : _sharedLineMat,
         },
-      })
-      this.entities.push(entity)
-      this.entityAlphas.push(alpha)
+      }))
     }
   }
 
   private buildLonLines(): void {
     for (let lon = -180; lon < 180; lon += LINE_SPACING_DEG) {
       const isMajor = lon % MAJOR_SPACING_DEG === 0
-      const alpha = isMajor ? MAJOR_LINE_ALPHA : LINE_BASE_ALPHA
 
       const positions: Cesium.Cartesian3[] = []
       for (let j = 0; j <= NUM_LON_SEGMENTS; j++) {
@@ -101,17 +107,14 @@ export class TacticalGridOverlay {
         positions.push(Cesium.Cartesian3.fromDegrees(lon, lat, 0))
       }
 
-      const entity = this.viewer.entities.add({
+      this.entities.push(this.viewer.entities.add({
+        show: false,
         polyline: {
           positions,
           width: isMajor ? 1.5 : 1,
-          material: new Cesium.ColorMaterialProperty(
-            Cesium.Color.LIMEGREEN.withAlpha(alpha),
-          ),
+          material: isMajor ? _sharedMajorMat : _sharedLineMat,
         },
-      })
-      this.entities.push(entity)
-      this.entityAlphas.push(alpha)
+      }))
     }
   }
 
@@ -126,18 +129,17 @@ export class TacticalGridOverlay {
         const rowIdx = Math.round((lat + 90 - labelOffset) / LABEL_SPACING_DEG)
         const rowLetter = letter(rowIdx)
 
-        const entity = this.viewer.entities.add({
+        this.entities.push(this.viewer.entities.add({
+          show: false,
           position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
           label: createLabelGraphics({
             text: `${colLetter}${rowLetter}`,
-            fillColor: Cesium.Color.LIMEGREEN.withAlpha(LABEL_ALPHA),
+            fillColor: _scratchLabelColor,
             horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
             verticalOrigin: Cesium.VerticalOrigin.CENTER,
             pixelOffset: new Cesium.Cartesian2(0, 0),
           }),
-        })
-        this.entities.push(entity)
-        this.entityAlphas.push(LABEL_ALPHA)
+        }))
       }
     }
   }
@@ -156,20 +158,17 @@ export class TacticalGridOverlay {
     if (Math.abs(newFade - this.currentFade) < 0.015) return
     this.currentFade = newFade
 
-    const n = this.entities.length
-    for (let i = 0; i < n; i++) {
-      const entity = this.entities[i]
-      const baseAlpha = this.entityAlphas[i]
-      const fadeAlpha = baseAlpha * newFade
+    const lineFade = LINE_BASE_ALPHA * newFade
+    const majorFade = MAJOR_LINE_ALPHA * newFade
+    const labelFade = LABEL_ALPHA * newFade
 
-      if (entity.polyline) {
-        entity.polyline!.material = new Cesium.ColorMaterialProperty(
-          Cesium.Color.LIMEGREEN.withAlpha(fadeAlpha),
-        )
-      } else if (entity.label) {
-        entity.label!.fillColor = Cesium.Color.LIMEGREEN.withAlpha(fadeAlpha) as unknown as Cesium.Property
-      }
-    }
+    ;(_sharedLineMat.color as unknown as { setValue: (c: Cesium.Color) => void }).setValue(
+      Cesium.Color.LIMEGREEN.withAlpha(lineFade, _scratchLineColor),
+    )
+    ;(_sharedMajorMat.color as unknown as { setValue: (c: Cesium.Color) => void }).setValue(
+      Cesium.Color.LIMEGREEN.withAlpha(majorFade, _scratchMajorColor),
+    )
+    Cesium.Color.LIMEGREEN.withAlpha(labelFade, _scratchLabelColor)
 
     this.viewer.scene.requestRender()
   }

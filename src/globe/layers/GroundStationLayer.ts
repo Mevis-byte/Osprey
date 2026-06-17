@@ -2,7 +2,7 @@ import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import { groundStations } from '@/mock-data'
 import type { Asset } from '@/types'
-import { MARKER_ICONS } from './label-styles'
+import { MARKER_ICONS, STATION_LABEL_DISTANCE } from './label-styles'
 
 const GS_COLOR = Cesium.Color.fromCssColorString('#60a5fa')
 
@@ -37,6 +37,7 @@ export class GroundStationLayer extends BaseLayer {
         billboard: this.createMarker(MARKER_ICONS.groundStation),
         label: this.createLabel(labelText, {
           fillColor: GS_COLOR,
+          distanceDisplayCondition: STATION_LABEL_DISTANCE,
         }),
         properties: {
           type: 'ground-station',

@@ -106,7 +106,7 @@ export class SatelliteSensorCone {
     SCRATCH_SCALE.x = baseRadius
     SCRATCH_SCALE.y = alt / 2
     SCRATCH_SCALE.z = baseRadius
-    const scale = Cesium.Matrix4.fromScale(SCRATCH_SCALE, new Cesium.Matrix4())
+    const scale = Cesium.Matrix4.fromScale(SCRATCH_SCALE, SCRATCH_MATRIX)
     Cesium.Matrix4.multiply(transform, scale, SCRATCH_MATRIX)
     this.primitive.modelMatrix = SCRATCH_MATRIX.clone(this.primitive.modelMatrix)
   }

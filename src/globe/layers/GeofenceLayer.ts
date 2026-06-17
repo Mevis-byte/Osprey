@@ -254,6 +254,7 @@ export class GeofenceLayer implements Layer {
           showBackground: true,
           backgroundColor: Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.6),
           backgroundPadding: new Cesium.Cartesian2(3, 1),
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 5.0e6),
         },
         show: false,
       })
@@ -333,6 +334,7 @@ export class GeofenceLayer implements Layer {
           showBackground: true,
           backgroundColor: Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.55),
           backgroundPadding: new Cesium.Cartesian2(3, 1),
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 5.0e6),
         },
         show: false,
       })
@@ -351,6 +353,7 @@ export class GeofenceLayer implements Layer {
         outlineWidth: 1.5,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
         scaleByDistance: new Cesium.NearFarScalar(1.0e6, 1.0, 2.5e7, 0.5),
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 5.0e6),
       },
       label: {
         text: gf.name,
@@ -364,6 +367,7 @@ export class GeofenceLayer implements Layer {
         showBackground: true,
         backgroundColor: Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.7),
         backgroundPadding: new Cesium.Cartesian2(4, 2),
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 5.0e6),
       },
       properties: {
         geofenceId: gf.id,

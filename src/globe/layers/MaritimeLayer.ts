@@ -1,7 +1,7 @@
 import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, MaritimeAsset } from '@/types'
-import { MARKER_ICONS } from './label-styles'
+import { MARKER_ICONS, MARITIME_LABEL_DISTANCE } from './label-styles'
 
 function isMaritime(asset: Asset): asset is MaritimeAsset {
   return asset.type === 'maritime'
@@ -42,6 +42,7 @@ export class MaritimeLayer extends BaseLayer {
         billboard: this.createMarker(MARKER_ICONS.maritime),
         label: this.createLabel(labelText, {
           fillColor: MARITIME_COLOR,
+          distanceDisplayCondition: MARITIME_LABEL_DISTANCE,
         }),
         properties: {
           type: asset.type,
