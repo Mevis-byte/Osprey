@@ -35,8 +35,36 @@ if (CESIUM_TOKEN) {
   Cesium.Ion.defaultAccessToken = CESIUM_TOKEN
 }
 
-const DARK_BACKGROUND = Cesium.Color.fromCssColorString('#0a0c12')
-const GLOBE_BASE_COLOR = Cesium.Color.fromCssColorString('#0f1219')
+const DARK_BACKGROUND = Cesium.Color.fromCssColorString('#000000')
+const GLOBE_BASE_COLOR = Cesium.Color.fromCssColorString('#000000')
+
+function createStarCanvas(): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  canvas.width = 512
+  canvas.height = 512
+  const ctx = canvas.getContext('2d')!
+
+  ctx.fillStyle = '#000000'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  const starCount = 300
+  for (let i = 0; i < starCount; i++) {
+    const x = Math.random() * canvas.width
+    const y = Math.random() * canvas.height
+    const radius = Math.random() * 1.0 + 0.4
+    const alpha = Math.random() * 0.5 + 0.3
+
+    ctx.beginPath()
+    ctx.arc(x, y, radius, 0, 2 * Math.PI)
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
+    ctx.fill()
+  }
+
+  return canvas
+}
+
+const _starCanvas = createStarCanvas()
+const _starUrl = _starCanvas.toDataURL()
 
 const CARTO_DARK_PROVIDER = new Cesium.UrlTemplateImageryProvider({
   url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{@2x}.png',
@@ -202,24 +230,28 @@ function GlobeViewer() {
     viewer.scene.globe.baseColor = GLOBE_BASE_COLOR
     viewer.scene.backgroundColor = DARK_BACKGROUND
     viewer.scene.globe.enableLighting = false
-    viewer.scene.globe.showGroundAtmosphere = true
-    viewer.scene.skyAtmosphere!.show = true
-    viewer.scene.skyAtmosphere!.brightnessShift = 0.2
-    viewer.scene.skyAtmosphere!.hueShift = -0.1
-    viewer.scene.skyAtmosphere!.saturationShift = 0.3
-    
-    // Subtle atmosphere — keep professional, avoid neon glow
-    viewer.scene.postProcessStages.bloom.enabled = true
-    viewer.scene.postProcessStages.bloom.uniforms.contrast = 1.0
-    viewer.scene.postProcessStages.bloom.uniforms.brightness = 0.0
-    viewer.scene.postProcessStages.bloom.uniforms.glowOnly = false
+    viewer.scene.globe.showGroundAtmosphere = false
+    if (viewer.scene.skyAtmosphere) {
+      viewer.scene.skyAtmosphere.show = false
+    }
+
+    viewer.scene.postProcessStages.bloom.enabled = false
 
     viewer.scene.fog.enabled = true
-    viewer.scene.fog.density = 0.00005
+    viewer.scene.fog.density = 0.00002
     viewer.scene.fog.screenSpaceErrorFactor = 1.5
 
     viewer.scene.skyBox?.destroy()
-    viewer.scene.skyBox = undefined as unknown as Cesium.SkyBox
+    viewer.scene.skyBox = new Cesium.SkyBox({
+      sources: {
+        positiveX: _starUrl,
+        negativeX: _starUrl,
+        positiveY: _starUrl,
+        negativeY: _starUrl,
+        positiveZ: _starUrl,
+        negativeZ: _starUrl,
+      },
+    })
     if (viewer.scene.moon) viewer.scene.moon.show = false
 
     const controller = viewer.scene.screenSpaceCameraController
@@ -678,7 +710,7 @@ function GlobeViewer() {
   }, [projectionMode, trackingAssetId])
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden" style={{ background: '#0a0c12' }}>
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden" style={{ background: '#000000' }}>
       <div className="absolute left-4 top-4 z-40 w-56 space-y-1">
         <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">Constellations</div>
         {constellations.map((c) => {
