@@ -53,7 +53,7 @@ export function SatelliteTooltip({ asset, x, y }: SatelliteTooltipProps) {
       className="pointer-events-none absolute z-50"
       style={{ left: x, top: y }}
     >
-      <div className="min-w-44 rounded-[2px] border border-border/60 bg-[#0d1117]/95 shadow-lg backdrop-blur-sm">
+      <div className="min-w-44 rounded-[2px] border border-border/60 bg-card/95 shadow-lg backdrop-blur-sm">
         <div className="border-b border-border/40 px-3 py-2">
           <p className="truncate text-[12px] font-semibold text-foreground/90">
             {asset.name}

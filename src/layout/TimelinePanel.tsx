@@ -43,7 +43,7 @@ function TimelinePanel() {
     const markers: { time: number; type: 'mission' | 'alert'; color: string }[] = []
     
     missions.forEach(m => {
-      markers.push({ time: new Date(m.startTime).getTime(), type: 'mission', color: 'bg-cyan-500' })
+      markers.push({ time: new Date(m.startTime).getTime(), type: 'mission', color: 'bg-accent' })
     })
     
     alerts.forEach(a => {
@@ -65,7 +65,7 @@ function TimelinePanel() {
   )
 
   return (
-    <footer className="flex items-center gap-4 border-t border-white/5 bg-[#0a0c12] px-4" style={{ height: 40 }}>
+    <footer className="flex items-center gap-4 border-t border-white/5 bg-card px-4" style={{ height: 40 }}>
       <div className="flex items-center gap-1.5">
         <button
           type="button"
@@ -138,8 +138,8 @@ function TimelinePanel() {
             [&::-webkit-slider-thumb]:h-4
             [&::-webkit-slider-thumb]:w-1
             [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:bg-cyan-400
-            [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(34,211,238,0.8)]
+            [&::-webkit-slider-thumb]:bg-accent
+            [&::-webkit-slider-thumb]:shadow-[0_0_5px_var(--theme-primary)]
             hover:[&::-webkit-slider-thumb]:scale-y-125
             transition-all
           "

@@ -726,9 +726,10 @@ function GlobeViewer() {
               }}
               className={`w-full rounded border px-3 py-2 text-left text-[11px] transition-all ${
                 isSelected
-                  ? 'border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_12px_rgba(34,211,238,0.08)]'
-                  : 'border-border/40 bg-[#0d1117]/60 hover:border-border/70'
+                  ? 'border-white/20 bg-card/80'
+                  : 'border-border/40 bg-card/60 hover:border-border/70'
               }`}
+              style={isSelected ? { borderColor: 'var(--theme-primary, #00BFFF)' } : {}}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

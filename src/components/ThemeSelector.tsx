@@ -16,7 +16,7 @@ export function ThemeSelector() {
       style={{ color: 'var(--theme-primary, #00BFFF)' }}
     >
       {THEME_IDS.map((id) => (
-        <option key={id} value={id} className="bg-[#0d1117] text-white">
+        <option key={id} value={id} className="bg-card text-foreground">
           {THEME_ICONS[id]} {THEME_LABELS[id]}
         </option>
       ))}

@@ -61,7 +61,7 @@ export function LayerControlPanel() {
             </div>
             
             <div className={`h-1.5 w-1.5 rounded-full transition-all ${
-              isActive ? 'shadow-[0_0_8px_var(--theme-primary, #00BFFF)]' : 'bg-white/10'
+              isActive ? 'shadow-[0_0_4px_var(--theme-primary)]' : 'bg-white/10'
             }`} style={isActive ? { backgroundColor: 'var(--theme-primary, #00BFFF)' } : {}} />
           </button>
         )

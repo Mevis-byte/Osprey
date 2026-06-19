@@ -36,7 +36,7 @@ export function AssetHoverCard({ asset, x, y }: Props) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 5 }}
       transition={{ duration: 0.15 }}
-      className="pointer-events-none absolute z-[100] w-64 overflow-hidden rounded-sm border border-cyan-500/30 bg-[#0a0c12]/95 shadow-2xl backdrop-blur-md"
+      className="pointer-events-none absolute z-[100] w-64 overflow-hidden rounded-sm border border-white/10 bg-card/95 shadow-2xl backdrop-blur-md"
       style={{ left: x + 15, top: y - 10 }}
     >
       {/* Header */}
@@ -77,7 +77,7 @@ export function AssetHoverCard({ asset, x, y }: Props) {
 
 function StatItem({ icon: Icon, label, value }: { icon: any, label: string, value: string }) {
   return (
-    <div className="bg-[#0a0c12] p-2.5">
+    <div className="bg-card p-2.5">
       <div className="flex items-center gap-1.5 mb-0.5">
         <Icon className="h-3 w-3 text-muted-foreground/40" />
         <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">{label}</span>
