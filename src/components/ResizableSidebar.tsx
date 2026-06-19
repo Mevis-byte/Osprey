@@ -2,6 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/store'
 
+const COMPACT_WIDTH = 44
+
+function safeWidth(w: number, min: number, max: number): number {
+  return Number.isFinite(w) ? Math.max(min, Math.min(max, Math.round(w))) : min
+}
+
 interface ResizableSidebarProps {
   side: 'left' | 'right'
   defaultWidth: number
@@ -11,8 +17,6 @@ interface ResizableSidebarProps {
   compactContent?: React.ReactNode
   className?: string
 }
-
-const COMPACT_WIDTH = 44
 
 export function ResizableSidebar({
   side,
@@ -32,16 +36,26 @@ export function ResizableSidebar({
   )
 
   const [isResizing, setIsResizing] = useState(false)
-  const [dragWidth, setDragWidth] = useState(storeState.width)
+  const [dragWidth, setDragWidth] = useState(() => safeWidth(storeState.width, minWidth, maxWidth))
   const containerRef = useRef<HTMLDivElement>(null)
   const startXRef = useRef(0)
-  const startWidthRef = useRef(storeState.width)
+  const startWidthRef = useRef(0)
+  const dragWidthRef = useRef(dragWidth)
   const rafRef = useRef<number | null>(null)
+
+  // Re-sync drag width when store width changes externally
+  useEffect(() => {
+    if (!isResizing) {
+      const safe = safeWidth(storeState.width, minWidth, maxWidth)
+      setDragWidth(safe)
+      dragWidthRef.current = safe
+    }
+  }, [storeState.width, isResizing, minWidth, maxWidth])
 
   const currentWidth = isResizing
     ? dragWidth
     : storeState.mode === 'expanded'
-      ? storeState.width
+      ? safeWidth(storeState.width, minWidth, maxWidth)
       : storeState.mode === 'compact'
         ? COMPACT_WIDTH
         : 0
@@ -50,25 +64,43 @@ export function ResizableSidebar({
     (e: React.PointerEvent) => {
       e.preventDefault()
       e.stopPropagation()
-      setIsResizing(true)
+      const startW = safeWidth(storeState.width, minWidth, maxWidth)
       startXRef.current = e.clientX
-      startWidthRef.current = storeState.width
-      setDragWidth(storeState.width)
+      startWidthRef.current = startW
+      dragWidthRef.current = startW
+      setDragWidth(startW)
+      setIsResizing(true)
     },
-    [storeState.width],
+    [storeState.width, minWidth, maxWidth],
   )
+
+  const applyWidth = useCallback(
+    (clientX: number) => {
+      const delta = side === 'right' ? startXRef.current - clientX : clientX - startXRef.current
+      const raw = startWidthRef.current + delta
+      const clamped = safeWidth(raw, minWidth, maxWidth)
+      dragWidthRef.current = clamped
+      setDragWidth(clamped)
+    },
+    [side, minWidth, maxWidth],
+  )
+
+  const commitWidth = useCallback(() => {
+    const final = safeWidth(dragWidthRef.current, minWidth, maxWidth)
+    setWidth(final)
+    dragWidthRef.current = final
+    setDragWidth(final)
+  }, [setWidth, minWidth, maxWidth])
 
   const handlePointerMove = useCallback(
     (e: PointerEvent) => {
       if (rafRef.current !== null) return
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = null
-        const delta = side === 'right' ? startXRef.current - e.clientX : e.clientX - startXRef.current
-        const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + delta))
-        setDragWidth(newWidth)
+        applyWidth(e.clientX)
       })
     },
-    [side, minWidth, maxWidth],
+    [applyWidth],
   )
 
   const handlePointerUp = useCallback(() => {
@@ -76,22 +108,18 @@ export function ResizableSidebar({
       cancelAnimationFrame(rafRef.current)
       rafRef.current = null
     }
+    // Flush final position
+    applyWidth(startXRef.current + (startXRef.current - startXRef.current))
+    commitWidth()
     setIsResizing(false)
-    setWidth(dragWidth)
-
-    globalThis.dispatchEvent(new CustomEvent('sidebar-resize'))
-  }, [dragWidth, setWidth])
+  }, [applyWidth, commitWidth])
 
   useEffect(() => {
     if (!isResizing) return
-    const el = containerRef.current
-    if (!el) return
-    el.setPointerCapture(0)
-
     const onMove = (e: PointerEvent) => handlePointerMove(e)
     const onUp = () => handlePointerUp()
 
-    globalThis.addEventListener('pointermove', onMove)
+    globalThis.addEventListener('pointermove', onMove, { passive: true })
     globalThis.addEventListener('pointerup', onUp)
 
     return () => {
@@ -105,11 +133,17 @@ export function ResizableSidebar({
   }, [isResizing, handlePointerMove, handlePointerUp])
 
   const handleDoubleClick = useCallback(() => {
-    setMode(storeState.mode === 'expanded' ? 'compact' : 'expanded')
+    const next = storeState.mode === 'expanded' ? 'compact' : 'expanded'
+    setMode(next)
   }, [storeState.mode, setMode])
 
   const isHidden = storeState.mode === 'hidden'
   const isCompact = storeState.mode === 'compact'
+
+  const indicatorStyle = {
+    backgroundColor: 'var(--theme-primary, #00BFFF)',
+    boxShadow: `0 0 8px var(--theme-primary, #00BFFF)`,
+  }
 
   return (
     <>
@@ -121,8 +155,9 @@ export function ResizableSidebar({
       )}
       {isResizing && (
         <div
-          className="fixed top-0 bottom-0 z-40 w-px bg-cyan-500/60 shadow-[0_0_8px_rgba(34,211,238,0.3)] pointer-events-none"
+          className="fixed top-0 bottom-0 z-40 w-px pointer-events-none"
           style={{
+            ...indicatorStyle,
             [side]: `${currentWidth}px`,
           }}
         />
@@ -140,11 +175,13 @@ export function ResizableSidebar({
         {!isHidden && (
           <>
             <div
-              className={`absolute inset-y-0 z-30 w-1 cursor-col-resize touch-none transition-colors hover:bg-cyan-500/30 ${
-                isResizing ? 'bg-cyan-500/40' : ''
-              } ${
+              className={`absolute inset-y-0 z-30 w-1 cursor-col-resize touch-none transition-colors ${
                 side === 'left' ? 'right-0' : 'left-0'
               }`}
+              style={{
+                backgroundColor: isResizing ? 'var(--theme-primary)' : 'transparent',
+                opacity: isResizing ? 0.4 : 0,
+              }}
               onPointerDown={handlePointerDown}
               onDoubleClick={handleDoubleClick}
             />

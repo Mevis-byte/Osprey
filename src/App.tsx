@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Search, Activity, Share2, Layers, Network, FileText, Plane, Ship, Satellite, Radio, Globe } from 'lucide-react'
 import TopBar from '@/layout/TopBar'
 import LeftPanel from '@/layout/LeftPanel'
@@ -7,6 +7,7 @@ import TimelinePanel from '@/layout/TimelinePanel'
 import GlobalSearch from '@/layout/GlobalSearch'
 import GlobeViewer from '@/globe/GlobeViewer'
 import { ResizableSidebar } from '@/components/ResizableSidebar'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useSimulation } from '@/hooks/useSimulation'
 import { useAppStore } from '@/store'
 import { ThemeProvider } from '@/components/ThemeProvider'
@@ -72,6 +73,9 @@ function ChevronIcon({ side }: { side: 'left' | 'right' }) {
 function App() {
   useSimulation()
 
+  const mainRef = useRef<HTMLElement>(null)
+  const resizeTimerRef = useRef<number | null>(null)
+
   const setLeftMode = useAppStore((s) => s.setSidebarLeftMode)
   const setRightMode = useAppStore((s) => s.setSidebarRightMode)
   const toggleLeft = useAppStore((s) => s.toggleSidebarLeft)
@@ -87,13 +91,34 @@ function App() {
     return () => globalThis.removeEventListener('keydown', handler)
   }, [toggleLeft])
 
+  // ResizeObserver — robust Cesium viewer resize on any layout change
   useEffect(() => {
-    const handler = () => {
-      const viewer = (globalThis as any).__cesiumViewer
-      if (viewer) viewer.resize()
+    const el = mainRef.current
+    if (!el) return
+
+    const ro = new ResizeObserver((entries) => {
+      for (const _entry of entries) {
+        if (resizeTimerRef.current !== null) {
+          cancelAnimationFrame(resizeTimerRef.current)
+        }
+        resizeTimerRef.current = requestAnimationFrame(() => {
+          resizeTimerRef.current = null
+          const viewer = (globalThis as any).__cesiumViewer
+          if (viewer && typeof viewer.resize === 'function') {
+            viewer.resize()
+          }
+        })
+      }
+    })
+
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      if (resizeTimerRef.current !== null) {
+        cancelAnimationFrame(resizeTimerRef.current)
+        resizeTimerRef.current = null
+      }
     }
-    globalThis.addEventListener('sidebar-resize', handler)
-    return () => globalThis.removeEventListener('sidebar-resize', handler)
   }, [])
 
   return (
@@ -103,54 +128,60 @@ function App() {
         <TopBar />
 
         <div className="flex min-h-0">
-          <ResizableSidebar
-            side="left"
-            defaultWidth={360}
-            minWidth={280}
-            maxWidth={700}
-            compactContent={
-              <CompactBar
-                side="left"
-                icons={[
-                  { icon: Search, label: 'Stream', onClick: () => setLeftMode('expanded') },
-                  { icon: Activity, label: 'Intel', onClick: () => setLeftMode('expanded') },
-                  { icon: Share2, label: 'Graph', onClick: () => setLeftMode('expanded') },
-                  { icon: Layers, label: 'Layers', onClick: () => setLeftMode('expanded') },
-                  { icon: Network, label: 'Ontology', onClick: () => setLeftMode('expanded') },
-                  { icon: FileText, label: 'Cases', onClick: () => setLeftMode('expanded') },
-                ]}
-              />
-            }
-            className="hidden lg:flex"
-          >
-            <LeftPanel />
-          </ResizableSidebar>
+          <ErrorBoundary>
+            <ResizableSidebar
+              side="left"
+              defaultWidth={360}
+              minWidth={280}
+              maxWidth={600}
+              compactContent={
+                <CompactBar
+                  side="left"
+                  icons={[
+                    { icon: Search, label: 'Stream', onClick: () => setLeftMode('expanded') },
+                    { icon: Activity, label: 'Intel', onClick: () => setLeftMode('expanded') },
+                    { icon: Share2, label: 'Graph', onClick: () => setLeftMode('expanded') },
+                    { icon: Layers, label: 'Layers', onClick: () => setLeftMode('expanded') },
+                    { icon: Network, label: 'Ontology', onClick: () => setLeftMode('expanded') },
+                    { icon: FileText, label: 'Cases', onClick: () => setLeftMode('expanded') },
+                  ]}
+                />
+              }
+              className="hidden lg:flex"
+            >
+              <LeftPanel />
+            </ResizableSidebar>
+          </ErrorBoundary>
 
-          <main className="relative flex-1 min-w-0 min-h-0">
-            <GlobeViewer />
-          </main>
+          <ErrorBoundary>
+            <main ref={mainRef} className="relative flex-1 min-w-0 min-h-0">
+              <GlobeViewer />
+            </main>
+          </ErrorBoundary>
 
-          <ResizableSidebar
-            side="right"
-            defaultWidth={320}
-            minWidth={280}
-            maxWidth={700}
-            compactContent={
-              <CompactBar
-                side="right"
-                icons={[
-                  { icon: Globe, label: 'Dashboard', onClick: () => setRightMode('expanded') },
-                  { icon: Plane, label: 'Aircraft', onClick: () => setRightMode('expanded') },
-                  { icon: Ship, label: 'Maritime', onClick: () => setRightMode('expanded') },
-                  { icon: Satellite, label: 'Satellite', onClick: () => setRightMode('expanded') },
-                  { icon: Radio, label: 'Signals', onClick: () => setRightMode('expanded') },
-                ]}
-              />
-            }
-            className="hidden lg:flex"
-          >
-            <RightPanel />
-          </ResizableSidebar>
+          <ErrorBoundary>
+            <ResizableSidebar
+              side="right"
+              defaultWidth={320}
+              minWidth={280}
+              maxWidth={700}
+              compactContent={
+                <CompactBar
+                  side="right"
+                  icons={[
+                    { icon: Globe, label: 'Dashboard', onClick: () => setRightMode('expanded') },
+                    { icon: Plane, label: 'Aircraft', onClick: () => setRightMode('expanded') },
+                    { icon: Ship, label: 'Maritime', onClick: () => setRightMode('expanded') },
+                    { icon: Satellite, label: 'Satellite', onClick: () => setRightMode('expanded') },
+                    { icon: Radio, label: 'Signals', onClick: () => setRightMode('expanded') },
+                  ]}
+                />
+              }
+              className="hidden lg:flex"
+            >
+              <RightPanel />
+            </ResizableSidebar>
+          </ErrorBoundary>
         </div>
 
         <TimelinePanel />

@@ -264,10 +264,14 @@ export const useAppStore = create<AppStore>()(
         toggleLayer: (key) => 
           set({ layerVisibility: { ...get().layerVisibility, [key]: !get().layerVisibility[key] } }),
 
-        setSidebarLeftWidth: (width) =>
-          set({ sidebarLeft: { ...get().sidebarLeft, width: Math.max(280, Math.min(700, width)) } }),
-        setSidebarRightWidth: (width) =>
-          set({ sidebarRight: { ...get().sidebarRight, width: Math.max(280, Math.min(700, width)) } }),
+        setSidebarLeftWidth: (width) => {
+          if (!Number.isFinite(width)) return
+          set({ sidebarLeft: { ...get().sidebarLeft, width: Math.max(280, Math.min(600, width)) } })
+        },
+        setSidebarRightWidth: (width) => {
+          if (!Number.isFinite(width)) return
+          set({ sidebarRight: { ...get().sidebarRight, width: Math.max(280, Math.min(700, width)) } })
+        },
         setSidebarLeftMode: (mode) =>
           set({ sidebarLeft: { ...get().sidebarLeft, mode } }),
         setSidebarRightMode: (mode) =>
