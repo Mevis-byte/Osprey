@@ -16,7 +16,7 @@ import {
   CommunicationLayer,
   GeofenceLayer
 } from './layers'
-import { TrailRenderer, assetTypeColor } from './trails/TrailRenderer'
+import { TrailRenderer } from './trails/TrailRenderer'
 import { HeatmapManager } from './heatmap'
 import { AssetHoverCard } from './tooltip/AssetHoverCard'
 import { SatelliteCoverageRings } from './coverage/SatelliteCoverageRings'
@@ -229,7 +229,7 @@ function GlobeViewer() {
 
     viewer.scene.globe.baseColor = GLOBE_BASE_COLOR
     viewer.scene.backgroundColor = DARK_BACKGROUND
-    viewer.scene.globe.enableLighting = false
+    viewer.scene.globe.enableLighting = true
     viewer.scene.globe.showGroundAtmosphere = false
     if (viewer.scene.skyAtmosphere) {
       viewer.scene.skyAtmosphere.show = false
@@ -525,12 +525,7 @@ function GlobeViewer() {
     const history = mgr.getAllHistory()
     const waypoints = mgr.getRemainingWaypointsMap()
 
-    const colors = new Map<string, Cesium.Color>()
-    for (const asset of assetData) {
-      colors.set(asset.id, assetTypeColor(asset.type))
-    }
-
-    trailRendererRef.current.update(history, waypoints, colors)
+    trailRendererRef.current.update(history, waypoints)
   }, [assetData])
 
   useEffect(() => {

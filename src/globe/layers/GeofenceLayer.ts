@@ -2,6 +2,7 @@ import * as Cesium from 'cesium'
 import type { Layer } from './BaseLayer'
 import type { Geofence } from '@/types'
 import { geofences as gfData } from '@/mock-data'
+import { ThemeColor } from './theme-colors'
 
 const RING_RADII_KM = [5, 10, 20, 35, 50, 75, 100, 150, 200, 300]
 const SPOKE_COUNT = 12
@@ -21,7 +22,7 @@ const ZONE_ALPHAS = [
   0.18, 0.12,
 ]
 
-const SPOKE_COLOR = Cesium.Color.fromCssColorString('rgba(255,255,255,0.15)')
+const SPOKE_COLOR = new Cesium.Color(1, 1, 1, 0.15)
 
 const CARDINAL_LABELS = ['N', 'E', 'S', 'W']
 
@@ -247,7 +248,7 @@ export class GeofenceLayer implements Layer {
         label: {
           text: CARDINAL_LABELS[c],
           font: '11px Inter, system-ui, sans-serif',
-          fillColor: Cesium.Color.fromCssColorString('rgba(255,255,255,0.55)'),
+          fillColor: ThemeColor.primary055,
           style: Cesium.LabelStyle.FILL,
           pixelOffset: new Cesium.Cartesian2(0, -12),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
@@ -327,7 +328,7 @@ export class GeofenceLayer implements Layer {
         label: {
           text: `${radius} km`,
           font: '10px Inter, system-ui, sans-serif',
-          fillColor: Cesium.Color.fromCssColorString(ZONE_COLORS[i]).withAlpha(0.55),
+          fillColor: ThemeColor.accent055,
           style: Cesium.LabelStyle.FILL,
           pixelOffset: new Cesium.Cartesian2(6, -6),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
@@ -348,7 +349,7 @@ export class GeofenceLayer implements Layer {
       position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
       point: {
         pixelSize: 6,
-        color: Cesium.Color.fromCssColorString('#60a5fa'),
+        color: ThemeColor.primary,
         outlineColor: Cesium.Color.WHITE,
         outlineWidth: 1.5,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
@@ -358,8 +359,8 @@ export class GeofenceLayer implements Layer {
       label: {
         text: gf.name,
         font: '12px Inter, system-ui, sans-serif',
-        fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.fromCssColorString('rgba(0,0,0,0.6)'),
+        fillColor: ThemeColor.primary,
+        outlineColor: new Cesium.Color(0, 0, 0, 0.6),
         outlineWidth: 1,
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         pixelOffset: new Cesium.Cartesian2(0, -16),
@@ -406,7 +407,7 @@ export class GeofenceLayer implements Layer {
         const pt = center.point
         if (pt) {
           pt.pixelSize = 6 as unknown as Cesium.Property
-          pt.color = Cesium.Color.fromCssColorString('#60a5fa') as unknown as Cesium.Property
+          pt.color = ThemeColor.primary as unknown as Cesium.Property
         }
       }
     }
@@ -419,7 +420,7 @@ export class GeofenceLayer implements Layer {
         const pt = center.point
         if (pt) {
           pt.pixelSize = 8 as unknown as Cesium.Property
-          pt.color = Cesium.Color.fromCssColorString('#93c5fd') as unknown as Cesium.Property
+          pt.color = ThemeColor.accent as unknown as Cesium.Property
         }
       }
     }

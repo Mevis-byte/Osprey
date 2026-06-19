@@ -55,13 +55,14 @@ export function LayerControlPanel() {
             }`}
           >
             <div className="flex items-center gap-3">
-              <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-cyan-400' : 'text-muted-foreground/30'}`} />
+              <Icon className={`h-3.5 w-3.5 ${isActive ? '' : 'text-muted-foreground/30'}`} 
+                style={isActive ? { color: 'var(--theme-primary, #00BFFF)' } : undefined} />
               <span className="text-[11px] font-medium tracking-tight">{label}</span>
             </div>
             
             <div className={`h-1.5 w-1.5 rounded-full transition-all ${
-              isActive ? 'bg-cyan-500 shadow-[0_0_8px_rgba(34,211,238,0.5)]' : 'bg-white/10'
-            }`} />
+              isActive ? 'shadow-[0_0_8px_var(--theme-primary, #00BFFF)]' : 'bg-white/10'
+            }`} style={isActive ? { backgroundColor: 'var(--theme-primary, #00BFFF)' } : {}} />
           </button>
         )
       })}

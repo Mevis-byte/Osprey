@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
 import type { Asset } from '@/types'
 import { createLabelGraphics } from './label-styles'
+import { ThemeColor } from './theme-colors'
 
 export interface Layer {
   readonly id: string
@@ -94,7 +95,7 @@ export abstract class BaseLayer implements Layer {
       if (next?.billboard) {
         const b = next.billboard as unknown as Record<string, unknown>
         b.scale = 0.65
-        b.color = Cesium.Color.fromCssColorString('#93c5fd')
+        b.color = ThemeColor.primary
       }
       if (next?.label) {
         next.label.scale = 1.05 as unknown as Cesium.Property

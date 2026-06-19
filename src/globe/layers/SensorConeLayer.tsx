@@ -2,8 +2,7 @@ import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import { useAppStore } from '@/store'
 import type { Asset, Satellite } from '@/types'
-
-const COLOR = Cesium.Color.fromCssColorString('#22d3ee').withAlpha(0.12)
+import { ThemeColor } from './theme-colors'
 
 const SCRATCH_SAT = new Cesium.Cartesian3()
 const SCRATCH_EARTH = new Cesium.Cartesian3()
@@ -50,7 +49,7 @@ export class SensorConeLayer extends BaseLayer {
 
     if (this.conePrimitive) {
       const app = this.conePrimitive.appearance as Cesium.MaterialAppearance
-      app.material.uniforms.color = COLOR
+      app.material.uniforms.color = ThemeColor.sensorCone
     }
   }
 

@@ -24,9 +24,13 @@ export function OperationalDashboard() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-foreground/90">Operational Node 01</h2>
           <p className="text-[10px] uppercase text-muted-foreground/60">{operationalMode.replace('-', ' ')}</p>
         </div>
-        <div className="flex items-center gap-2 rounded-sm border border-emerald-500/20 bg-emerald-500/5 px-2 py-1">
-          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-          <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">System Nominal</span>
+        <div className="flex items-center gap-2 rounded-sm border px-2 py-1"
+          style={{
+            borderColor: 'rgba(0,255,136,0.2)',
+            backgroundColor: 'rgba(0,255,136,0.05)',
+          }}>
+          <div className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ backgroundColor: 'var(--theme-success, #00FF88)' }} />
+          <span className="text-[9px] font-bold uppercase tracking-tighter" style={{ color: 'var(--theme-success, #00FF88)' }}>System Nominal</span>
         </div>
       </div>
 

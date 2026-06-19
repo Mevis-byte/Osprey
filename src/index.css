@@ -69,6 +69,38 @@
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.3);
   }
+
+  .theme-tactical-blue {
+    --theme-primary: #00BFFF;
+    --theme-accent: #4CC9FF;
+    --theme-success: #00FF88;
+    --theme-warning: #FFB800;
+    --theme-danger: #FF5555;
+  }
+
+  .theme-black-gold {
+    --theme-primary: #D4AF37;
+    --theme-accent: #FFD700;
+    --theme-success: #B6FF6A;
+    --theme-warning: #FFC857;
+    --theme-danger: #FF6B6B;
+  }
+
+  .theme-military-green {
+    --theme-primary: #00FF88;
+    --theme-accent: #7CFC00;
+    --theme-success: #00FF88;
+    --theme-warning: #FFD166;
+    --theme-danger: #FF595E;
+  }
+
+  .theme-monochrome {
+    --theme-primary: #FFFFFF;
+    --theme-accent: #BBBBBB;
+    --theme-success: #FFFFFF;
+    --theme-warning: #CCCCCC;
+    --theme-danger: #888888;
+  }
 }
 
 @layer components {

@@ -72,9 +72,14 @@ function TimelinePanel() {
           onClick={() => setPlaying(!isPlaying)}
           className={`flex h-6 w-6 items-center justify-center rounded-sm border transition-all ${
             isPlaying 
-              ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400' 
-              : 'border-white/10 text-muted-foreground/60 hover:border-white/20 hover:text-foreground'
+            ? '' 
+            : 'border-white/10 text-muted-foreground/60 hover:border-white/20 hover:text-foreground'
           }`}
+          style={isPlaying ? {
+            borderColor: 'var(--theme-primary, #00BFFF)',
+            backgroundColor: 'rgba(0,191,255,0.08)',
+            color: 'var(--theme-primary, #00BFFF)',
+          } : {}}
         >
           {isPlaying ? <Pause className="h-3 w-3 fill-current" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
         </button>
@@ -89,9 +94,13 @@ function TimelinePanel() {
                 onClick={() => setSimulationSpeed(speed)}
                 className={`rounded-[1px] px-2 py-0.5 text-[9px] font-bold transition-all ${
                   active
-                    ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.2)]'
+                    ? ''
                     : 'text-muted-foreground/40 hover:text-muted-foreground/70'
                 }`}
+                style={active ? {
+                  backgroundColor: 'rgba(0,191,255,0.12)',
+                  color: 'var(--theme-primary, #00BFFF)',
+                } : {}}
               >
                 {speed}x
               </button>
@@ -159,7 +168,7 @@ function TimelinePanel() {
       <div className="h-4 w-px bg-white/5" />
 
       <div className="flex flex-col items-end justify-center min-w-[100px]">
-        <span className="text-[10px] font-black tabular-nums tracking-wider text-cyan-400/90 leading-none">
+        <span className="text-[10px] font-black tabular-nums tracking-wider leading-none" style={{ color: 'var(--theme-primary, #00BFFF)' }}>
           {formatPosition(clampedPosition).split(' ')[1]}
         </span>
         <span className="text-[7px] font-bold text-muted-foreground/40 uppercase tracking-tighter mt-0.5">

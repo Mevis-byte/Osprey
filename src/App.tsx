@@ -9,6 +9,7 @@ import GlobeViewer from '@/globe/GlobeViewer'
 import { ResizableSidebar } from '@/components/ResizableSidebar'
 import { useSimulation } from '@/hooks/useSimulation'
 import { useAppStore } from '@/store'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 function CompactBar({
   icons,
@@ -96,7 +97,7 @@ function App() {
   }, [])
 
   return (
-    <>
+    <ThemeProvider>
       <GlobalSearch />
       <div className="grid h-screen w-screen grid-rows-[32px_1fr_32px] overflow-hidden bg-background">
         <TopBar />
@@ -154,7 +155,7 @@ function App() {
 
         <TimelinePanel />
       </div>
-    </>
+    </ThemeProvider>
   )
 }
 

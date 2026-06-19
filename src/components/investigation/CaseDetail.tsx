@@ -91,7 +91,7 @@ export function CaseDetail({ caseItem }: { caseItem: InvestigationCase }) {
           type="button"
           onClick={() => setTab('overview')}
           className={`rounded-[2px] px-2 py-1 text-[8px] font-bold uppercase tracking-wider transition-colors ${
-            tab === 'overview' ? 'bg-primary/15 text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            tab === 'overview' ? 'bg-accent/15 text-accent' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
           }`}
         >
           Overview
@@ -100,7 +100,7 @@ export function CaseDetail({ caseItem }: { caseItem: InvestigationCase }) {
           type="button"
           onClick={() => setTab('entities')}
           className={`rounded-[2px] px-2 py-1 text-[8px] font-bold uppercase tracking-wider transition-colors ${
-            tab === 'entities' ? 'bg-primary/15 text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            tab === 'entities' ? 'bg-accent/15 text-accent' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
           }`}
         >
           Entities ({caseItem.entities.length})
@@ -109,7 +109,7 @@ export function CaseDetail({ caseItem }: { caseItem: InvestigationCase }) {
           type="button"
           onClick={() => setTab('activity')}
           className={`rounded-[2px] px-2 py-1 text-[8px] font-bold uppercase tracking-wider transition-colors ${
-            tab === 'activity' ? 'bg-primary/15 text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            tab === 'activity' ? 'bg-accent/15 text-accent' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
           }`}
         >
           Activity ({caseItem.events.length + caseItem.alerts.length})
@@ -118,7 +118,7 @@ export function CaseDetail({ caseItem }: { caseItem: InvestigationCase }) {
           type="button"
           onClick={() => setTab('notes')}
           className={`rounded-[2px] px-2 py-1 text-[8px] font-bold uppercase tracking-wider transition-colors ${
-            tab === 'notes' ? 'bg-primary/15 text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+            tab === 'notes' ? 'bg-accent/15 text-accent' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
           }`}
         >
           Notes ({caseItem.notes.length})
@@ -177,7 +177,7 @@ export function CaseDetail({ caseItem }: { caseItem: InvestigationCase }) {
               <div key={e.entityId} className="group flex items-center justify-between rounded-[2px] border border-border/40 bg-background/20 px-2 py-1">
                 <button
                   onClick={() => handleEntityClick(e)}
-                  className="min-w-0 flex-1 text-left transition-colors hover:text-primary"
+                  className="min-w-0 flex-1 text-left transition-colors hover:text-white"
                 >
                   <span className="text-[10px] text-foreground/80">{e.entityName}</span>
                   <span className="ml-1.5 text-[7px] uppercase text-muted-foreground/50">{e.entityType}</span>
@@ -248,7 +248,8 @@ export function CaseDetail({ caseItem }: { caseItem: InvestigationCase }) {
                 <button
                   type="button"
                   onClick={handleAddNote}
-                  className="rounded-[2px] bg-primary/20 px-2.5 py-1 text-[9px] font-bold text-primary hover:bg-primary/30 transition-colors"
+                  className="rounded-[2px] px-2.5 py-1 text-[9px] font-bold transition-colors"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: 'var(--theme-primary, #00BFFF)' }}
                 >
                   Add
                 </button>

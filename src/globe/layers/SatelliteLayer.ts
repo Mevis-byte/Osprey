@@ -1,6 +1,8 @@
 import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, Satellite } from '@/types'
+import { SATELLITE_LABEL_DISTANCE } from './label-styles'
+import { ThemeColor } from './theme-colors'
 
 function isSatellite(asset: Asset): asset is Satellite {
   return asset.type === 'satellite'
@@ -47,6 +49,7 @@ export class SatelliteLayer extends BaseLayer {
         label: this.createLabel(labelText, {
           fillColor: Cesium.Color.WHITE,
           showBackground: false,
+          distanceDisplayCondition: SATELLITE_LABEL_DISTANCE,
         }),
         properties: {
           type: asset.type,
@@ -79,7 +82,7 @@ export class SatelliteLayer extends BaseLayer {
       const next = this.entities.find((e) => e.id === entityId)
       if (next?.point) {
         next.point.color = Cesium.Color.WHITE as unknown as Cesium.Property
-        next.point.outlineColor = Cesium.Color.fromCssColorString('#22c55e') as unknown as Cesium.Property
+        next.point.outlineColor = ThemeColor.success as unknown as Cesium.Property
       }
     }
   }

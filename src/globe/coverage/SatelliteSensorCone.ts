@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium'
 import { useAppStore } from '@/store'
+import { ThemeColor } from '@/globe/layers/theme-colors'
 
 const SCRATCH_SAT = new Cesium.Cartesian3()
 const SCRATCH_EARTH = new Cesium.Cartesian3()
@@ -7,7 +8,7 @@ const SCRATCH_MID = new Cesium.Cartesian3()
 const SCRATCH_MATRIX = new Cesium.Matrix4()
 const SCRATCH_SCALE = new Cesium.Cartesian3()
 
-const COLOR = Cesium.Color.fromCssColorString('#22d3ee').withAlpha(0.12)
+const COLOR = new Cesium.Color(ThemeColor.primary.red, ThemeColor.primary.green, ThemeColor.primary.blue, 0.12)
 
 export class SatelliteSensorCone {
   private viewer: Cesium.Viewer

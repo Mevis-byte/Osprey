@@ -143,7 +143,11 @@ export function CaseFormDialog({ open, onClose, editCase }: CaseFormDialogProps)
                 </button>
                 <button
                   type="submit"
-                  className="rounded-[2px] bg-primary/20 px-3 py-1.5 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors"
+                  className="rounded-[2px] px-3 py-1.5 text-[10px] font-bold transition-colors"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.12)',
+                    color: 'var(--theme-primary, #00BFFF)',
+                  }}
                 >
                   {isEditing ? 'Save Changes' : 'Create Case'}
                 </button>

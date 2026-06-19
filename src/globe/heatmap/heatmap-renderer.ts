@@ -58,6 +58,67 @@ function heatmapColor(value: number): [number, number, number, number] {
   return [255, 30, 0, 255]
 }
 
+export function createHeatmapCanvas(
+  options?: Partial<RenderOptions>,
+): HTMLCanvasElement {
+  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const canvas = document.createElement('canvas')
+  canvas.width = opts.width
+  canvas.height = opts.height
+  canvas.getContext('2d', { willReadFrequently: true })
+  return canvas
+}
+
+export function renderHeatmapToCanvas(
+  canvas: HTMLCanvasElement,
+  points: HeatmapPoint[],
+  options?: Partial<RenderOptions>,
+): void {
+  const opts = { ...DEFAULT_OPTIONS, ...options }
+  canvas.width = opts.width
+  canvas.height = opts.height
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.globalCompositeOperation = 'lighter'
+
+  for (const point of points) {
+    const [x, y] = latLonToPixel(point.lat, point.lon, opts.width, opts.height)
+    const weight = Math.min(1, point.weight ?? 1)
+    if (
+      x < -opts.radius || x > opts.width + opts.radius ||
+      y < -opts.radius || y > opts.height + opts.radius
+    ) continue
+
+    const g = ctx.createRadialGradient(x, y, 0, x, y, opts.radius)
+    g.addColorStop(0, `rgba(255,255,255,${weight * 0.7})`)
+    g.addColorStop(0.4, `rgba(255,255,255,${weight * 0.35})`)
+    g.addColorStop(0.7, `rgba(255,255,255,${weight * 0.10})`)
+    g.addColorStop(1, 'rgba(255,255,255,0)')
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(x, y, opts.radius, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  ctx.globalCompositeOperation = 'source-over'
+
+  const imageData = ctx.getImageData(0, 0, opts.width, opts.height)
+  const data = imageData.data
+
+  for (let i = 0; i < data.length; i += 4) {
+    const intensity = data[i] / 255
+    const normalized = Math.min(1, intensity / opts.maxIntensity)
+    const [r, g, b, a] = heatmapColor(normalized)
+    data[i] = r
+    data[i + 1] = g
+    data[i + 2] = b
+    data[i + 3] = a
+  }
+
+  ctx.putImageData(imageData, 0, 0)
+}
+
 export function renderHeatmap(
   points: HeatmapPoint[],
   options?: Partial<RenderOptions>,

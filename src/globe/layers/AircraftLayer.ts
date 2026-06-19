@@ -2,12 +2,11 @@ import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, Aircraft } from '@/types'
 import { MARKER_ICONS, AIRCRAFT_LABEL_DISTANCE } from './label-styles'
+import { ThemeColor } from './theme-colors'
 
 function isAircraft(asset: Asset): asset is Aircraft {
   return asset.type === 'fixed-wing' || asset.type === 'rotary-wing'
 }
-
-const AIRCRAFT_COLOR = Cesium.Color.fromCssColorString('#22d3ee')
 
 export class AircraftLayer extends BaseLayer {
   constructor(viewer: Cesium.Viewer) {
@@ -41,7 +40,7 @@ export class AircraftLayer extends BaseLayer {
         position,
         billboard: this.createMarker(MARKER_ICONS.aircraft),
         label: this.createLabel(labelText, {
-          fillColor: AIRCRAFT_COLOR,
+          fillColor: ThemeColor.accent,
           distanceDisplayCondition: AIRCRAFT_LABEL_DISTANCE,
         }),
         properties: {

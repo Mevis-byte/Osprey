@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium'
 import { getSimulationManager } from '@/services/simulation'
-import { TrailRenderer, assetTypeColor } from '../trails/TrailRenderer'
+import { TrailRenderer } from '../trails/TrailRenderer'
 import type { Asset } from '@/types'
 import type { Layer } from './BaseLayer'
 
@@ -26,13 +26,7 @@ export class GroundTrackLayer implements Layer {
     const mgr = getSimulationManager()
     const history = mgr.getAllHistory()
     const waypoints = mgr.getRemainingWaypointsMap()
-    const colors = new Map<string, Cesium.Color>()
-
-    for (const asset of assets) {
-      colors.set(asset.id, assetTypeColor(asset.type))
-    }
-
-    this.renderer.update(history, waypoints, colors)
+    this.renderer.update(history, waypoints)
   }
 
   clear(): void {

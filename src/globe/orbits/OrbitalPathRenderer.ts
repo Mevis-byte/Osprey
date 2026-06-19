@@ -1,23 +1,32 @@
 import * as Cesium from 'cesium'
 import { useAppStore } from '@/store'
 import type { Satellite } from '@/types'
+import { ThemeColor } from '@/globe/layers/theme-colors'
 
 const DEG2RAD = Math.PI / 180
 const RAD2DEG = 180 / Math.PI
 const EARTH_RATE = 7.2921159e-5
 const NUM_POINTS = 360
 const HALF_POINTS = NUM_POINTS / 2
-const PAST_ALPHA = 0.2
-const FUTURE_ALPHA = 0.7
-const HINT_ALPHA = 0.15
 const POSITION_PIXEL_SIZE = 10
 
 const SCRATCH_CART = new Cesium.Cartesian3()
 
-function orbitColor(altitude: number): Cesium.Color {
-  if (altitude < 2000000) return Cesium.Color.fromCssColorString('#22c55e')
-  if (altitude < 35786000) return Cesium.Color.fromCssColorString('#f59e0b')
-  return Cesium.Color.fromCssColorString('#3b82f6')
+interface OrbitThemeColors {
+  past: Cesium.Color
+  future: Cesium.Color
+  hint: Cesium.Color
+  position: Cesium.Color
+}
+
+function orbitTheme(altitude: number): OrbitThemeColors {
+  if (altitude < 2000000) {
+    return { past: ThemeColor.orbitPast, future: ThemeColor.orbitFuture, hint: ThemeColor.orbitHint, position: ThemeColor.orbitPosition }
+  }
+  if (altitude < 35786000) {
+    return { past: ThemeColor.orbitPastMid, future: ThemeColor.orbitFutureMid, hint: ThemeColor.orbitHintMid, position: ThemeColor.orbitPositionMid }
+  }
+  return { past: ThemeColor.orbitPastHigh, future: ThemeColor.orbitFutureHigh, hint: ThemeColor.orbitHintHigh, position: ThemeColor.orbitPositionHigh }
 }
 
 function computePhase(latitude: number, inclination: number): number {
@@ -132,7 +141,7 @@ export class OrbitalPathRenderer {
   }
 
   private addSatellite(sat: Satellite): void {
-    const color = orbitColor(sat.altitude)
+    const theme = orbitTheme(sat.altitude)
     const ascendingNode = computeAscendingNode(sat.longitude, sat.latitude, sat.inclination)
     const orbitalRate = (2 * Math.PI) / (sat.period * 60)
     const orbitPositions = generateOrbitPositions(
@@ -143,7 +152,7 @@ export class OrbitalPathRenderer {
       polyline: {
         positions: [],
         width: 1.5,
-        material: new Cesium.ColorMaterialProperty(color.withAlpha(PAST_ALPHA)),
+        material: new Cesium.ColorMaterialProperty(theme.past),
       },
       show: false,
     })
@@ -152,7 +161,7 @@ export class OrbitalPathRenderer {
       polyline: {
         positions: [],
         width: 2,
-        material: new Cesium.ColorMaterialProperty(color.withAlpha(FUTURE_ALPHA)),
+        material: new Cesium.ColorMaterialProperty(theme.future),
       },
       show: false,
     })
@@ -161,7 +170,7 @@ export class OrbitalPathRenderer {
       polyline: {
         positions: orbitPositions,
         width: 1,
-        material: new Cesium.ColorMaterialProperty(color.withAlpha(HINT_ALPHA)),
+        material: new Cesium.ColorMaterialProperty(theme.hint),
       },
       show: true,
     })
@@ -171,7 +180,7 @@ export class OrbitalPathRenderer {
       position: basePos,
       point: {
         pixelSize: POSITION_PIXEL_SIZE,
-        color: color,
+        color: theme.position,
         outlineColor: Cesium.Color.WHITE,
         outlineWidth: 2,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
@@ -181,7 +190,7 @@ export class OrbitalPathRenderer {
 
     this.orbits.set(sat.id, {
       pastEntity, futureEntity, hintEntity, positionEntity,
-      orbitPositions, color, altitude: sat.altitude,
+      orbitPositions, color: theme.position, altitude: sat.altitude,
       inclination: sat.inclination, ascendingNode, orbitalRate,
     })
   }

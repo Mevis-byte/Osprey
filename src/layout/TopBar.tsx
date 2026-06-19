@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Satellite, Crosshair, Bell, Clock } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { ViewModeSelector } from '@/components/ViewModeSelector'
+import { ThemeSelector } from '@/components/ThemeSelector'
 
 function useUtcClock() {
   const [time, setTime] = useState(new Date().toISOString().slice(11, 19))
@@ -20,12 +21,14 @@ function useUtcClock() {
 function StatusDot() {
   return (
     <motion.span
-      className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"
+      className="relative inline-flex h-1.5 w-1.5 rounded-full"
+      style={{ backgroundColor: 'var(--theme-success, #00FF88)' }}
       animate={{ opacity: [1, 0.4, 1] }}
       transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
     >
       <motion.span
-        className="absolute inset-0 rounded-full bg-emerald-500"
+        className="absolute inset-0 rounded-full"
+        style={{ backgroundColor: 'var(--theme-success, #00FF88)' }}
         animate={{ scale: [1, 2], opacity: [0.35, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -50,10 +53,11 @@ function TopBar() {
     >
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
-          <div className="flex h-4 w-4 items-center justify-center rounded-sm bg-primary/10 border border-primary/20">
-            <Satellite className="h-2.5 w-2.5 text-primary" />
+          <div className="flex h-4 w-4 items-center justify-center rounded-sm border"
+            style={{ borderColor: 'var(--theme-primary, #00BFFF)', backgroundColor: 'rgba(0,191,255,0.08)' }}>
+            <Satellite className="h-2.5 w-2.5" style={{ color: 'var(--theme-primary, #00BFFF)' }} />
           </div>
-          <span className="text-xs font-black tracking-[0.2em] text-primary">OSPREY</span>
+          <span className="text-xs font-black tracking-[0.2em]" style={{ color: 'var(--theme-primary, #00BFFF)' }}>OSPREY</span>
         </div>
 
         <span className="h-3 w-px bg-white/10" />
@@ -70,7 +74,8 @@ function TopBar() {
           <select 
             value={operationalMode}
             onChange={(e) => setOperationalMode(e.target.value as any)}
-            className="bg-transparent text-[10px] font-bold tracking-wider text-cyan-400 uppercase outline-none cursor-pointer hover:text-cyan-300 transition-colors"
+            className="bg-transparent text-[10px] font-bold tracking-wider uppercase outline-none cursor-pointer transition-colors"
+            style={{ color: 'var(--theme-primary, #00BFFF)' }}
           >
             <option value="global-surveillance">Global Surveillance</option>
             <option value="space-operations">Space Operations</option>
@@ -82,6 +87,10 @@ function TopBar() {
         <span className="h-3 w-px bg-white/10" />
 
         <ViewModeSelector />
+
+        <span className="h-3 w-px bg-white/10" />
+
+        <ThemeSelector />
 
         <span className="h-3 w-px bg-white/10" />
 

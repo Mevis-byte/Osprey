@@ -2,15 +2,16 @@ import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import { useAppStore } from '@/store'
 import type { Asset } from '@/types'
+import { ThemeColor } from './theme-colors'
 
 const EARTH_R = 6371000
 const PREDICTION_MARKS = [5, 15, 30, 60] as const
 const SEGMENT_COLORS = [
-  Cesium.Color.fromCssColorString('#22d3ee'),
-  Cesium.Color.fromCssColorString('#22c55e'),
-  Cesium.Color.fromCssColorString('#eab308'),
-  Cesium.Color.fromCssColorString('#ef4444'),
-]
+  ThemeColor.primary,
+  ThemeColor.success,
+  ThemeColor.warning,
+  ThemeColor.danger,
+] as const
 
 const SCRATCH_PREV = new Cesium.Cartesian3()
 const SCRATCH_CURR = new Cesium.Cartesian3()
@@ -57,7 +58,7 @@ export class TrajectoryLayer extends BaseLayer {
           positions: [],
           width: 2,
           material: new Cesium.PolylineDashMaterialProperty({
-            color: SEGMENT_COLORS[i].withAlpha(0.8),
+            color: i === 0 ? ThemeColor.primary08 : SEGMENT_COLORS[i],
             dashLength: 16,
           }),
         },

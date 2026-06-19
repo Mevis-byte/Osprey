@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import type { Asset, Alert, FeedEvent, Geofence, GroundStation, Mission, ConstellationInfo, Region, OperationalMode, ProjectionMode } from '@/types'
+import type { ThemeId } from '@/globe/layers/theme-colors'
 import type { AssetType, AssetStatus, ThreatLevel } from '@/types'
 import { constellations as constData } from '@/mock-data'
 import { geofences as gfData } from '@/mock-data'
@@ -74,6 +75,7 @@ export interface AppStore {
   isPlaying: boolean
   trackingAssetId: string | null
   focusRequestId: string | null
+  theme: ThemeId
 
   setSelectedAsset: (asset: Asset | null) => void
   setHoveredAsset: (asset: Asset | null) => void
@@ -92,6 +94,7 @@ export interface AppStore {
   setPlaying: (playing: boolean) => void
   setTrackingAssetId: (id: string | null) => void
   requestFocus: (id: string | null) => void
+  setTheme: (theme: ThemeId) => void
   toggleFilter: (category: FilterCategory, value: string) => void
   resetFilters: () => void
   addAlert: (alert: Omit<Alert, 'id' | 'timestamp' | 'acknowledged' | 'acknowledgedBy'>) => void
@@ -162,6 +165,7 @@ export const useAppStore = create<AppStore>()(
         isPlaying: false,
         trackingAssetId: null,
         focusRequestId: null,
+        theme: 'tactical-blue',
         sidebarLeft: { width: 360, mode: 'expanded' },
         sidebarRight: { width: 320, mode: 'expanded' },
         projectionMode: 'globe',
@@ -183,6 +187,7 @@ export const useAppStore = create<AppStore>()(
         setPlaying: (playing) => set({ isPlaying: playing }),
         setTrackingAssetId: (id) => set({ trackingAssetId: id }),
         requestFocus: (id) => set({ focusRequestId: id }),
+        setTheme: (theme) => set({ theme }),
 
         toggleFilter: (category, value) => {
           const filters = get().activeFilters
@@ -293,6 +298,7 @@ export const useAppStore = create<AppStore>()(
           sidebarLeft: state.sidebarLeft,
           sidebarRight: state.sidebarRight,
           projectionMode: state.projectionMode,
+          theme: state.theme,
         }),
       },
     ),

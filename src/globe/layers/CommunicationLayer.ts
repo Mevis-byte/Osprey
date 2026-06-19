@@ -4,8 +4,10 @@ import { groundStations } from '@/mock-data'
 import type { Asset } from '@/types'
 import { BaseLayer } from './BaseLayer'
 
-const LINK_COLOR = Cesium.Color.fromCssColorString('#10b981')
-const LINK_SELECTED_COLOR = Cesium.Color.fromCssColorString('#fbbf24')
+import { ThemeColor } from './theme-colors'
+
+const LINK_COLOR = ThemeColor.success
+const LINK_SELECTED_COLOR = ThemeColor.primary
 
 function findSatellite(assetId: string): Asset | undefined {
   return useAppStore.getState().assetData.find((asset) => asset.id === assetId)

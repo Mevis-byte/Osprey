@@ -172,7 +172,7 @@ function TrackingControls({ asset }: { asset: Asset }) {
           onClick={() => setTrackingAssetId(isTracking ? null : asset.id)}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-[2px] border px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
             isTracking
-              ? 'border-primary/20 bg-primary/10 text-primary'
+              ? 'border-accent/20 bg-accent/10 text-accent'
               : 'border-border/60 text-muted-foreground/70 hover:border-muted-foreground/30 hover:text-muted-foreground'
           }`}
         >
@@ -219,9 +219,10 @@ function CaseAssignment({ asset }: { asset: Asset }) {
               key={c.id}
               type="button"
               onClick={() => setSelectedCaseId(c.id)}
-              className="flex w-full items-center gap-1.5 rounded-[2px] border border-cyan-400/20 bg-cyan-500/5 px-2 py-1 text-left transition-colors hover:bg-cyan-500/10"
+              className="flex w-full items-center gap-1.5 rounded-[2px] border border-white/10 px-2 py-1 text-left transition-colors hover:bg-white/5"
+              style={{ borderLeft: '2px solid var(--theme-primary, #00BFFF)' }}
             >
-              <span className="h-1.5 w-1.5 shrink-0 rounded-[2px] bg-cyan-400" />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-[2px]" style={{ backgroundColor: 'var(--theme-primary, #00BFFF)' }} />
               <span className="min-w-0 flex-1 truncate text-[9px] text-foreground/70">{c.title}</span>
             </button>
           ))}
@@ -234,7 +235,7 @@ function CaseAssignment({ asset }: { asset: Asset }) {
               key={c.id}
               type="button"
               onClick={() => handleAdd(c.id)}
-              className="rounded-[2px] border border-border/60 px-1.5 py-0.5 text-[8px] text-muted-foreground/60 hover:border-cyan-400/30 hover:text-cyan-400 transition-colors"
+              className="rounded-[2px] border border-border/60 px-1.5 py-0.5 text-[8px] text-muted-foreground/60 transition-colors hover:border-white/30 hover:text-white"
             >
               + {c.id}
             </button>

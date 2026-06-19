@@ -117,7 +117,7 @@ function LeftPanel() {
             onClick={() => setTab('stream')}
             className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
               tab === 'stream'
-                ? 'text-primary border-b-2 border-primary'
+                ? 'text-accent border-b-2 border-accent'
                 : 'text-muted-foreground/50 hover:text-muted-foreground/80'
             }`}
           >
@@ -129,7 +129,7 @@ function LeftPanel() {
             onClick={() => setTab('intel')}
             className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
               tab === 'intel'
-                ? 'text-primary border-b-2 border-primary'
+                ? 'text-accent border-b-2 border-accent'
                 : 'text-muted-foreground/50 hover:text-muted-foreground/80'
             }`}
           >
@@ -141,7 +141,7 @@ function LeftPanel() {
             onClick={() => setTab('graph')}
             className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
               tab === 'graph'
-                ? 'text-primary border-b-2 border-primary'
+                ? 'text-accent border-b-2 border-accent'
                 : 'text-muted-foreground/50 hover:text-muted-foreground/80'
             }`}
           >
@@ -153,7 +153,7 @@ function LeftPanel() {
             onClick={() => setTab('layers')}
             className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
               tab === 'layers'
-                ? 'text-primary border-b-2 border-primary'
+                ? 'text-accent border-b-2 border-accent'
                 : 'text-muted-foreground/50 hover:text-muted-foreground/80'
             }`}
           >
@@ -165,7 +165,7 @@ function LeftPanel() {
             onClick={() => setTab('ontology')}
             className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
               tab === 'ontology'
-                ? 'text-primary border-b-2 border-primary'
+                ? 'text-accent border-b-2 border-accent'
                 : 'text-muted-foreground/50 hover:text-muted-foreground/80'
             }`}
           >
@@ -177,7 +177,7 @@ function LeftPanel() {
             onClick={() => setTab('cases')}
             className={`flex flex-1 items-center justify-center gap-1.5 py-1.5 text-[9px] font-semibold uppercase tracking-widest transition-colors ${
               tab === 'cases'
-                ? 'text-primary border-b-2 border-primary'
+                ? 'text-accent border-b-2 border-accent'
                 : 'text-muted-foreground/50 hover:text-muted-foreground/80'
             }`}
           >

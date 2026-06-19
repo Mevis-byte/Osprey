@@ -1,8 +1,9 @@
 import * as Cesium from 'cesium'
 import { useAppStore } from '@/store'
+import { ThemeColor } from '@/globe/layers/theme-colors'
 
 const EARTH_RADIUS = 6371000
-const GRID_COLOR = Cesium.Color.fromCssColorString('#00cc66').withAlpha(0.18)
+const GRID_COLOR = ThemeColor.success
 const NUM_SEGMENTS = 60
 const UPDATE_THRESHOLD = 0.02
 const NUM_LINES = 7

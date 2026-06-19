@@ -1,21 +1,50 @@
 import * as Cesium from 'cesium'
 import type { HistoryPoint } from '@/services/simulation/HistoryTracker'
 import type { Waypoint } from '@/services/simulation/types'
-
-const AIRCRAFT_COLOR = Cesium.Color.fromCssColorString('#22d3ee')
-const MARITIME_COLOR = Cesium.Color.fromCssColorString('#4ade80')
-const SATELLITE_COLOR = Cesium.Color.fromCssColorString('#fbbf24')
+import { ThemeColor } from '@/globe/layers/theme-colors'
 
 export function assetTypeColor(type: string): Cesium.Color {
-  if (type === 'fixed-wing' || type === 'rotary-wing') return AIRCRAFT_COLOR
-  if (type === 'maritime') return MARITIME_COLOR
-  return SATELLITE_COLOR
+  if (type === 'fixed-wing' || type === 'rotary-wing') return ThemeColor.primary
+  if (type === 'maritime') return ThemeColor.success
+  return ThemeColor.accent
+}
+
+function assetTypeTrailColor(type: string): Cesium.Color {
+  if (type === 'fixed-wing' || type === 'rotary-wing') return ThemeColor.trailAircraft
+  if (type === 'maritime') return ThemeColor.trailMaritime
+  return ThemeColor.trailSatellite
+}
+
+function assetTypeFutureColor(type: string): Cesium.Color {
+  if (type === 'fixed-wing' || type === 'rotary-wing') return ThemeColor.futureAircraft
+  if (type === 'maritime') return ThemeColor.futureMaritime
+  return ThemeColor.futureSatellite
+}
+
+function reusePositions(
+  pool: Cesium.Cartesian3[],
+  count: number,
+  fill: (i: number, dest: Cesium.Cartesian3) => Cesium.Cartesian3,
+): Cesium.Cartesian3[] {
+  for (let i = 0; i < count; i++) {
+    if (i < pool.length) {
+      fill(i, pool[i])
+    } else {
+      pool.push(fill(i, new Cesium.Cartesian3()))
+    }
+  }
+  if (pool.length > count) {
+    pool.length = count
+  }
+  return pool
 }
 
 export class TrailRenderer {
   private viewer: Cesium.Viewer
   private trailEntities = new Map<string, Cesium.Entity>()
   private futureEntities = new Map<string, Cesium.Entity>()
+  private trailPools = new Map<string, Cesium.Cartesian3[]>()
+  private futurePools = new Map<string, Cesium.Cartesian3[]>()
   private destroyHandles: (() => void)[] = []
   private _visible = true
 
@@ -26,19 +55,18 @@ export class TrailRenderer {
   update(
     history: Map<string, readonly HistoryPoint[]>,
     waypointData: Map<string, { currentLat: number; currentLon: number; remaining: readonly Waypoint[] }>,
-    colors: Map<string, Cesium.Color>,
   ): void {
     if (!this._visible) return
 
     const activeIds = new Set([...history.keys(), ...waypointData.keys()])
 
     for (const id of activeIds) {
-      const color = colors.get(id) ?? Cesium.Color.WHITE
       const pts = history.get(id)
-      this.updateTrail(id, pts, color)
+      const type = pts && pts.length > 0 ? (pts[0] as any).type ?? '' : ''
+      this.updateTrail(id, pts, type)
 
       const wpData = waypointData.get(id)
-      this.updateFuture(id, wpData, color)
+      this.updateFuture(id, wpData, type)
     }
 
     for (const id of this.trailEntities.keys()) {
@@ -49,7 +77,7 @@ export class TrailRenderer {
     }
   }
 
-  private updateTrail(id: string, points: readonly HistoryPoint[] | undefined, color: Cesium.Color): void {
+  private updateTrail(id: string, points: readonly HistoryPoint[] | undefined, type: string): void {
     let entity = this.trailEntities.get(id)
 
     if (!points || points.length < 2) {
@@ -57,8 +85,16 @@ export class TrailRenderer {
       return
     }
 
-    const positions = points.map((p) =>
-      Cesium.Cartesian3.fromDegrees(p.longitude, p.latitude, 0),
+    const color = assetTypeTrailColor(type)
+
+    let pool = this.trailPools.get(id)
+    if (!pool) {
+      pool = []
+      this.trailPools.set(id, pool)
+    }
+
+    const positions = reusePositions(pool, points.length, (i, dest) =>
+      Cesium.Cartesian3.fromDegrees(points[i].longitude, points[i].latitude, 0, undefined, dest),
     )
 
     if (!entity) {
@@ -67,7 +103,7 @@ export class TrailRenderer {
         polyline: {
           positions,
           width: 1.5,
-          material: color.withAlpha(0.40),
+          material: color,
           clampToGround: true,
         },
       })
@@ -82,7 +118,7 @@ export class TrailRenderer {
   private updateFuture(
     id: string,
     data: { currentLat: number; currentLon: number; remaining: readonly Waypoint[] } | undefined,
-    color: Cesium.Color,
+    type: string,
   ): void {
     let entity = this.futureEntities.get(id)
 
@@ -91,10 +127,21 @@ export class TrailRenderer {
       return
     }
 
-    const positions = [
-      Cesium.Cartesian3.fromDegrees(data.currentLon, data.currentLat, 0),
-      ...data.remaining.map((w) => Cesium.Cartesian3.fromDegrees(w.longitude, w.latitude, 0)),
-    ]
+    const color = assetTypeFutureColor(type)
+
+    const count = 1 + data.remaining.length
+    let pool = this.futurePools.get(id)
+    if (!pool) {
+      pool = []
+      this.futurePools.set(id, pool)
+    }
+
+    const positions = reusePositions(pool, count, (i, dest) => {
+      if (i === 0) {
+        return Cesium.Cartesian3.fromDegrees(data.currentLon, data.currentLat, 0, undefined, dest)
+      }
+      return Cesium.Cartesian3.fromDegrees(data.remaining[i - 1].longitude, data.remaining[i - 1].latitude, 0, undefined, dest)
+    })
 
     if (!entity) {
       entity = this.viewer.entities.add({
@@ -102,7 +149,7 @@ export class TrailRenderer {
         polyline: {
           positions,
           width: 1,
-          material: color.withAlpha(0.18),
+          material: color,
           clampToGround: true,
         },
       })
@@ -124,6 +171,8 @@ export class TrailRenderer {
     for (const cleanup of this.destroyHandles) cleanup()
     this.trailEntities.clear()
     this.futureEntities.clear()
+    this.trailPools.clear()
+    this.futurePools.clear()
     this.destroyHandles = []
   }
 }

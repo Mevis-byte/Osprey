@@ -2,12 +2,11 @@ import * as Cesium from 'cesium'
 import { BaseLayer } from './BaseLayer'
 import type { Asset, MaritimeAsset } from '@/types'
 import { MARKER_ICONS, MARITIME_LABEL_DISTANCE } from './label-styles'
+import { ThemeColor } from './theme-colors'
 
 function isMaritime(asset: Asset): asset is MaritimeAsset {
   return asset.type === 'maritime'
 }
-
-const MARITIME_COLOR = Cesium.Color.fromCssColorString('#4ade80')
 
 export class MaritimeLayer extends BaseLayer {
   constructor(viewer: Cesium.Viewer) {
@@ -41,7 +40,7 @@ export class MaritimeLayer extends BaseLayer {
         position,
         billboard: this.createMarker(MARKER_ICONS.maritime),
         label: this.createLabel(labelText, {
-          fillColor: MARITIME_COLOR,
+          fillColor: ThemeColor.success,
           distanceDisplayCondition: MARITIME_LABEL_DISTANCE,
         }),
         properties: {

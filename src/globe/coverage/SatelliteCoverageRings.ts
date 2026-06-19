@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium'
 import { useAppStore } from '@/store'
+import { ThemeColor } from '@/globe/layers/theme-colors'
 
 const EARTH_RADIUS = 6371000
 
@@ -10,7 +11,7 @@ const RING_CONFIGS = [
   { pct: 1.00, alpha: 0.05 },
 ]
 
-const RING_COLOR = Cesium.Color.fromCssColorString('#22d3ee')
+const RING_COLOR = ThemeColor.primary
 
 export class SatelliteCoverageRings {
   private viewer: Cesium.Viewer

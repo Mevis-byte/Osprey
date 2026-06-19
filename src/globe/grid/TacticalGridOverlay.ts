@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium'
 import { createLabelGraphics } from '../layers/label-styles'
+import { ThemeColor } from '../layers/theme-colors'
 
 const LINE_SPACING_DEG = 10
 const LABEL_SPACING_DEG = 30
@@ -19,12 +20,12 @@ function letter(i: number): string {
   return String.fromCharCode(65 + i)
 }
 
-const _scratchLineColor = Cesium.Color.LIMEGREEN.clone()
-const _scratchMajorColor = Cesium.Color.LIMEGREEN.clone()
-const _scratchLabelColor = Cesium.Color.LIMEGREEN.clone()
+const _scratchLineColor = ThemeColor.tacticalGrid.clone()
+const _scratchMajorColor = ThemeColor.tacticalGrid.clone()
+const _scratchLabelColor = ThemeColor.tacticalGrid.clone()
 const _sharedLineMat = new Cesium.ColorMaterialProperty(_scratchLineColor)
 const _sharedMajorMat = new Cesium.ColorMaterialProperty(_scratchMajorColor)
-Cesium.Color.LIMEGREEN.withAlpha(LABEL_ALPHA, _scratchLabelColor)
+ThemeColor.tacticalGrid.withAlpha(LABEL_ALPHA, _scratchLabelColor)
 
 export class TacticalGridOverlay {
   private viewer: Cesium.Viewer
@@ -163,12 +164,12 @@ export class TacticalGridOverlay {
     const labelFade = LABEL_ALPHA * newFade
 
     ;(_sharedLineMat.color as unknown as { setValue: (c: Cesium.Color) => void }).setValue(
-      Cesium.Color.LIMEGREEN.withAlpha(lineFade, _scratchLineColor),
+      ThemeColor.tacticalGrid.withAlpha(lineFade, _scratchLineColor),
     )
     ;(_sharedMajorMat.color as unknown as { setValue: (c: Cesium.Color) => void }).setValue(
-      Cesium.Color.LIMEGREEN.withAlpha(majorFade, _scratchMajorColor),
+      ThemeColor.tacticalGrid.withAlpha(majorFade, _scratchMajorColor),
     )
-    Cesium.Color.LIMEGREEN.withAlpha(labelFade, _scratchLabelColor)
+    ThemeColor.tacticalGrid.withAlpha(labelFade, _scratchLabelColor)
 
     this.viewer.scene.requestRender()
   }
