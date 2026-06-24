@@ -4,11 +4,19 @@ export interface TLEData {
   line2: string;
 }
 
+export interface FetchGroupStatus {
+  group: string;
+  ok: boolean;
+  status: number | null;
+  error: string | null;
+}
+
 export class CelesTrakService {
   private static instance: CelesTrakService;
   private tleCache: Map<string, TLEData> = new Map();
   private lastFetchTime: number = 0;
-  private readonly FETCH_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly FETCH_INTERVAL = 24 * 60 * 60 * 1000;
+  private fetchResults: FetchGroupStatus[] = [];
 
   private readonly GROUPS = {
     STATIONS: 'stations',
@@ -26,7 +34,6 @@ export class CelesTrakService {
   };
 
   private constructor() {
-    // Initialize with fallback TLEs
     for (const [id, tle] of Object.entries(this.FALLBACK_TLES)) {
       this.tleCache.set(id, tle);
     }
@@ -41,25 +48,47 @@ export class CelesTrakService {
 
   public async fetchAll(): Promise<void> {
     const now = Date.now();
-    if (now - this.lastFetchTime < this.FETCH_INTERVAL && this.tleCache.size > 0) {
+    if (now - this.lastFetchTime < this.FETCH_INTERVAL && this.tleCache.size > 1) {
       return;
     }
 
     const groups = Object.values(this.GROUPS);
+    this.fetchResults = [];
     await Promise.all(groups.map(group => this.fetchGroup(group)));
     this.lastFetchTime = now;
+
+    const failed = this.fetchResults.filter(r => !r.ok);
+    if (failed.length > 0) {
+      console.warn(
+        `[CelesTrak] ${failed.length}/${groups.length} TLE groups failed to fetch:`,
+        failed.map(r => `${r.group} (${r.status ?? 'error'})`).join(', '),
+      );
+    }
   }
 
   private async fetchGroup(group: string): Promise<void> {
     try {
-      const response = await fetch(`https://celestrak.org/NORAD/elements/gp.php?GROUP=${group}&FORMAT=tle`);
-      if (!response.ok) throw new Error(`Failed to fetch ${group}`);
-      
+      const url = `https://celestrak.org/NORAD/elements/gp.php?GROUP=${group}&FORMAT=tle`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        this.fetchResults.push({
+          group,
+          ok: false,
+          status: response.status,
+          error: `HTTP ${response.status} ${response.statusText}`,
+        });
+        console.warn(`[CelesTrak] ${group}: HTTP ${response.status} — using fallback ephemeris`);
+        return;
+      }
+
       const text = await response.text();
       this.parseTLE(text);
+      this.fetchResults.push({ group, ok: true, status: response.status, error: null });
     } catch (error) {
-      console.error(`Error fetching TLE group ${group}:`, error);
-      // Fallback logic could go here, e.g., loading from local storage
+      const msg = error instanceof Error ? error.message : String(error);
+      this.fetchResults.push({ group, ok: false, status: null, error: msg });
+      console.warn(`[CelesTrak] ${group}: network error — using fallback ephemeris`, msg);
     }
   }
 
@@ -67,12 +96,11 @@ export class CelesTrakService {
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     for (let i = 0; i < lines.length; i += 3) {
       if (i + 2 >= lines.length) break;
-      
+
       const name = lines[i];
       const line1 = lines[i + 1];
       const line2 = lines[i + 2];
-      
-      // Extract NORAD ID from line 2 (columns 3-7)
+
       const noradId = line2.substring(2, 7).trim();
       this.tleCache.set(noradId, { name, line1, line2 });
     }
@@ -84,5 +112,9 @@ export class CelesTrakService {
 
   public getAllTLEs(): Map<string, TLEData> {
     return this.tleCache;
+  }
+
+  public getFetchResults(): readonly FetchGroupStatus[] {
+    return this.fetchResults;
   }
 }

@@ -326,6 +326,8 @@ function GlobeViewer() {
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
 
     handler.setInputAction((movement: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+      if (!movement?.position) return
+
       const pick = viewer.scene.pick(movement.position)
       const entity = pick?.id instanceof Cesium.Entity ? pick.id : null
       const entityId = entity?.id ?? null
@@ -341,12 +343,16 @@ function GlobeViewer() {
         asset: hoverAsset as Asset | null,
       })
 
-      viewer.scene.canvas.style.cursor = hoverAsset ? 'pointer' : 'default'
+      if (viewer.scene?.canvas?.style) {
+        viewer.scene.canvas.style.cursor = hoverAsset ? 'pointer' : 'default'
+      }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
 
     let clickTimer: ReturnType<typeof setTimeout> | null = null
 
     handler.setInputAction((movement: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+      if (!movement?.position) return
+
       const pick = viewer.scene.pick(movement.position)
       const entity = pick?.id instanceof Cesium.Entity ? pick.id : null
       const entityId = entity?.id ?? null
@@ -404,6 +410,8 @@ function GlobeViewer() {
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
 
     handler.setInputAction((movement: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+      if (!movement?.position) return
+
       if (clickTimer) {
         clearTimeout(clickTimer)
         clickTimer = null

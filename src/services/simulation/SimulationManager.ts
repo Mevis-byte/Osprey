@@ -42,7 +42,11 @@ export class SimulationManager {
     this.timelinePosition = timelinePosition
 
     // Fetch TLE data before initializing satellites
-    await CelesTrakService.getInstance().fetchAll()
+    try {
+      await CelesTrakService.getInstance().fetchAll()
+    } catch {
+      console.warn('[Simulation] TLE fetch failed — satellites will use fallback ephemeris')
+    }
 
     this.originalAssets.clear()
     for (const asset of assets) {
