@@ -1,10 +1,4 @@
-export interface HistoryPoint {
-  latitude: number
-  longitude: number
-  altitude: number
-  timestamp: number
-}
-
+import type { HistoryPoint } from './types'
 export class HistoryTracker {
   private points: HistoryPoint[] = []
   private elapsed = 0

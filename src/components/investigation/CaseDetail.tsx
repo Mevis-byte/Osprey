@@ -154,10 +154,10 @@ export function CaseDetail({ caseItem }: { caseItem: InvestigationCase }) {
               <div className="space-y-0.5">
                 {[...caseItem.events, ...caseItem.alerts.map((a) => ({ ...a, isAlert: true }))]
                   .slice(0, 4)
-                  .map((item: any, i: number) => (
+                  .map((item: { isAlert?: boolean; title: string; timestamp?: string }, i) => (
                     <div key={i} className="rounded-[2px] border border-border/40 bg-background/20 px-2 py-1">
                       <div className="flex items-center gap-1.5">
-                        <span className={`h-1.5 w-1.5 rounded-[2px] ${item.isAlert ? 'bg-red-400' : 'bg-cyan-400'}`} />
+                        <span className={'h-1.5 w-1.5 rounded-[2px] ' + (item.isAlert ? 'bg-red-400' : 'bg-cyan-400')} />
                         <span className="text-[9px] text-foreground/70">{item.title}</span>
                       </div>
                       {item.timestamp && <span className="text-[7px] text-muted-foreground/40">{timeAgo(item.timestamp)}</span>}

@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium'
-import type { HistoryPoint } from '@/services/simulation/HistoryTracker'
+import type { HistoryPoint } from '@/services/simulation/types'
 import type { Waypoint } from '@/services/simulation/types'
+import { useAppStore } from '@/store'
 import { ThemeColor } from '@/globe/layers/theme-colors'
 
 export function assetTypeColor(type: string): Cesium.Color {
@@ -60,9 +61,12 @@ export class TrailRenderer {
 
     const activeIds = new Set([...history.keys(), ...waypointData.keys()])
 
+    const assets = useAppStore.getState().assetData
+
     for (const id of activeIds) {
       const pts = history.get(id)
-      const type = pts && pts.length > 0 ? (pts[0] as any).type ?? '' : ''
+      const asset = assets.find((a) => a.id === id)
+      const type = asset?.type ?? ''
       this.updateTrail(id, pts, type)
 
       const wpData = waypointData.get(id)

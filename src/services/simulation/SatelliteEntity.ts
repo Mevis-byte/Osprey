@@ -1,9 +1,8 @@
 import * as satellite from 'satellite.js'
+import { DEG2RAD, RAD2DEG, EARTH_RADIUS } from '@/lib/constants'
 import type { Asset, Satellite } from '@/types'
 import { CelesTrakService } from '../CelesTrakService'
 
-const DEG2RAD = Math.PI / 180
-const RAD2DEG = 180 / Math.PI
 const EARTH_RATE = 7.2921159e-5
 const GM = 3.986004418e14
 
@@ -101,7 +100,7 @@ export class SatelliteEntity {
       ) - EARTH_RATE * (this.phase / this.orbitalRate)
       this.longitude = ((lonRad * RAD2DEG) + 540) % 360 - 180
 
-      const r = (this.altitude + 6371000)
+      const r = (this.altitude + EARTH_RADIUS)
       const orbitalSpeed = Math.sqrt(GM / r)
       this.speed = Math.round(orbitalSpeed / 100) / 10
     }

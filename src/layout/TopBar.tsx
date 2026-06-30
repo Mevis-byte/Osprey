@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Satellite, Crosshair, Bell, Clock } from 'lucide-react'
 import { useAppStore } from '@/store'
+import type { OperationalMode } from '@/types'
 import { ViewModeSelector } from '@/components/ViewModeSelector'
 import { ThemeSelector } from '@/components/ThemeSelector'
 
@@ -73,7 +74,7 @@ function TopBar() {
           <span className="text-[9px] font-bold tracking-widest text-muted-foreground/40 uppercase">MODE:</span>
           <select 
             value={operationalMode}
-            onChange={(e) => setOperationalMode(e.target.value as any)}
+            onChange={(e) => setOperationalMode(e.target.value as OperationalMode)}
             className="bg-transparent text-[10px] font-bold tracking-wider uppercase outline-none cursor-pointer transition-colors"
             style={{ color: 'var(--theme-primary, #00BFFF)' }}
           >

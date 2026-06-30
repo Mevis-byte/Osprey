@@ -108,8 +108,6 @@ export function ResizableSidebar({
       cancelAnimationFrame(rafRef.current)
       rafRef.current = null
     }
-    // Flush final position
-    applyWidth(startXRef.current + (startXRef.current - startXRef.current))
     commitWidth()
     setIsResizing(false)
   }, [applyWidth, commitWidth])

@@ -1,6 +1,14 @@
-import type { GroundStation } from '@/types'
+import type { GroundStation, DataSourceInfo } from '@/types'
 
-export const groundStations: GroundStation[] = [
+const GS_SOURCE: DataSourceInfo = {
+  source: 'OSPREY Simulation Engine',
+  lastUpdated: new Date().toISOString(),
+  refreshRate: 'static (simulated)',
+  confidence: 0.7,
+  dataQuality: 'simulated',
+}
+
+export const groundStations = [
   {
     id: 'GS-001',
     name: 'Northrop Grumman - Aurora',
@@ -10,6 +18,7 @@ export const groundStations: GroundStation[] = [
     altitude: 1640,
     status: 'active',
     lastUpdated: '2026-06-15T08:00:00Z',
+    dataSource: GS_SOURCE,
     coverageRadiusKm: 2500,
     connectedSatelliteIds: ['SV-001', 'SV-003'],
     country: 'USA',
@@ -24,6 +33,7 @@ export const groundStations: GroundStation[] = [
     type: 'ground-station',
     status: 'active',
     lastUpdated: '2026-06-15T08:00:00Z',
+    dataSource: GS_SOURCE,
     coverageRadiusKm: 3000,
     connectedSatelliteIds: ['SV-002'],
     country: 'Norway',
@@ -38,9 +48,10 @@ export const groundStations: GroundStation[] = [
     type: 'ground-station',
     status: 'active',
     lastUpdated: '2026-06-15T08:00:00Z',
+    dataSource: GS_SOURCE,
     coverageRadiusKm: 2000,
     connectedSatelliteIds: ['SV-004', 'SV-005'],
     country: 'UK (BIOT)',
     operator: 'US Space Force',
   },
-]
+] as GroundStation[]

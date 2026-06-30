@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Network, FileText, Braces, Terminal, Play } from 'lucide-react'
@@ -12,7 +13,7 @@ import { ReasonerConsole } from './ReasonerConsole'
 
 type OntologyTab = 'hierarchy' | 'properties' | 'graph' | 'reasoner'
 
-const TABS: { key: OntologyTab; label: string; icon: any }[] = [
+const TABS: { key: OntologyTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: 'hierarchy', label: 'Hierarchy', icon: FileText },
   { key: 'properties', label: 'Properties', icon: Braces },
   { key: 'graph', label: 'Graph', icon: Network },

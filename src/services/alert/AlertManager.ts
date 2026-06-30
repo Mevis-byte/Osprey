@@ -1,13 +1,5 @@
-import type { Asset, Alert } from '@/types'
+import type { Asset, Alert, FeedEvent } from '@/types'
 import type { AppStore } from '@/store'
-
-const SOURCES = {
-  'low-signal': ['SIGMON-ALPHA', 'COMM-FWD', 'SIGINT-FWD'],
-  'route-deviation': ['FMP-TRACK', 'NAV-CONTROL', 'CRC-TABOR'],
-  'high-speed': ['SPEED-GATE', 'RADAR-2', 'FMP-SHARE'],
-  'lost-contact': ['COMM-LINK', 'SATCOM-1', 'EWS-DELTA'],
-  'orbital-anomaly': ['ORB-SENSOR', 'SSC-SPACE', 'NRO-DSO'],
-} as const
 
 const COOLDOWN_MS: Record<string, number> = {
   'low-signal': 60000,
@@ -17,11 +9,13 @@ const COOLDOWN_MS: Record<string, number> = {
   'orbital-anomaly': 120000,
 }
 
-function pick<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)]
-}
+type AlertType = string
 
-type AlertType = keyof typeof SOURCES
+interface SystemEvent {
+  type: FeedEvent['type']
+  title: string
+  body: string
+}
 
 export class AlertManager {
   private cooldowns = new Map<string, number>()
@@ -58,34 +52,35 @@ export class AlertManager {
     const key = `${type}:${assetId}`
     const last = this.cooldowns.get(key) ?? 0
     const cd = COOLDOWN_MS[type]
+    if (cd === undefined) return false
     if (now - last < cd) return false
     this.cooldowns.set(key, now)
     return true
   }
 
-  private dispatchAlert(
+  private dispatch(
     asset: Asset,
     severity: Alert['severity'],
-    title: string,
-    message: string,
-    feedType: 'intel' | 'status' | 'movement' | 'report',
-    feedTitle: string,
-    feedBody: string,
-    threatLevel: 'none' | 'low' | 'medium' | 'high' | 'critical',
-    sourceKey: AlertType,
+    event: SystemEvent,
+    _alertType: string,
     dispatch: (fn: (store: AppStore) => void) => void,
   ): void {
     dispatch((store) => {
-      store.addAlert({ title, message, severity, assetIds: [asset.id] })
-      store.addFeedEvent({
-        type: feedType,
+      store.addAlert({
+        title: event.title,
+        message: event.body,
         severity,
-        title: feedTitle,
-        body: feedBody,
-        timestamp: new Date().toISOString(),
-        source: pick(SOURCES[sourceKey]),
         assetIds: [asset.id],
-        threatLevel,
+      })
+      store.addFeedEvent({
+        type: event.type,
+        severity,
+        title: event.title,
+        body: event.body,
+        timestamp: new Date().toISOString(),
+        source: asset.dataSource?.source ?? 'simulation-engine',
+        assetIds: [asset.id],
+        threatLevel: severity === 'critical' ? 'critical' : severity === 'high' ? 'high' : 'medium',
       })
     })
   }
@@ -113,18 +108,11 @@ export class AlertManager {
     this.signalStrengths.set(asset.id, signal)
 
     if (signal < 25 && this.canFire('low-signal', asset.id, now)) {
-      this.dispatchAlert(
-        asset,
-        'high',
-        `Low Signal — ${asset.name}`,
-        `Telemetry signal dropped to ${signal.toFixed(0)}%. Data latency increasing.`,
-        'status',
-        `Signal Degraded: ${asset.name}`,
-        `${asset.name} signal strength critically low at ${signal.toFixed(0)}%. Possible jamming or atmospheric interference.`,
-        'medium',
-        'low-signal',
-        dispatch,
-      )
+      this.dispatch(asset, 'high', {
+        type: 'status',
+        title: `Signal degraded: ${asset.name}`,
+        body: `Telemetry signal dropped to ${signal.toFixed(0)}% — ${asset.name} (${asset.id}). Source: ${asset.dataSource?.source ?? 'unknown'}.`,
+      }, 'low-signal', dispatch)
     }
   }
 
@@ -146,18 +134,11 @@ export class AlertManager {
     const threshold = asset.type === 'maritime' ? 30 : 20
     if (normalized > threshold && this.canFire('route-deviation', asset.id, now)) {
       const dir = asset.heading > prev ? 'starboard' : 'port'
-      this.dispatchAlert(
-        asset,
-        'medium',
-        `Course Change — ${asset.name}`,
-        `${asset.name} turned ${dir} ${normalized.toFixed(0)}° off projected track.`,
-        'movement',
-        `Route Deviation: ${asset.name}`,
-        `${asset.name} deviated ${normalized.toFixed(0)}° ${dir} from expected heading. Possible diversion or evasion.`,
-        'medium',
-        'route-deviation',
-        dispatch,
-      )
+      this.dispatch(asset, 'medium', {
+        type: 'movement',
+        title: `Route deviation: ${asset.name}`,
+        body: `${asset.name} (${asset.id}) turned ${dir} ${normalized.toFixed(0)}° from previous heading ${prev.toFixed(0)}° → ${asset.heading.toFixed(0)}°.`,
+      }, 'route-deviation', dispatch)
     }
   }
 
@@ -176,18 +157,11 @@ export class AlertManager {
 
     if (asset.speed > limit && this.canFire('high-speed', asset.id, now)) {
       const pct = ((asset.speed / limit) * 100).toFixed(0)
-      this.dispatchAlert(
-        asset,
-        'high',
-        `Excessive Speed — ${asset.name}`,
-        `${asset.name} at ${asset.speed.toFixed(0)} kts (${pct}% of threshold). Notify command.`,
-        'movement',
-        `High Speed Alert: ${asset.name}`,
-        `${asset.name} recorded at ${asset.speed.toFixed(0)} kts, exceeding standard limits. Possible emergency or pursuit.`,
-        'high',
-        'high-speed',
-        dispatch,
-      )
+      this.dispatch(asset, 'high', {
+        type: 'movement',
+        title: `Speed anomaly: ${asset.name}`,
+        body: `${asset.name} (${asset.id}) at ${asset.speed.toFixed(0)} kts — ${pct}% of ${limit} kts threshold.`,
+      }, 'high-speed', dispatch)
     }
   }
 
@@ -205,18 +179,11 @@ export class AlertManager {
 
     const prob = d / 50000
     if (prob > Math.random() && this.canFire('lost-contact', asset.id, now)) {
-      this.dispatchAlert(
-        asset,
-        'critical',
-        `Contact Lost — ${asset.name}`,
-        `All communications with ${asset.name} ceased. Last known position: ${asset.latitude.toFixed(2)}, ${asset.longitude.toFixed(2)}.`,
-        'status',
-        `Lost Contact: ${asset.name}`,
-        `Communications with ${asset.name} lost. Search and recovery procedures initiated. Last telemetry indicated normal operations.`,
-        'critical',
-        'lost-contact',
-        dispatch,
-      )
+      this.dispatch(asset, 'critical', {
+        type: 'status',
+        title: `Contact lost: ${asset.name}`,
+        body: `Telemetry from ${asset.name} (${asset.id}) interrupted. Last position: ${asset.latitude.toFixed(2)}°, ${asset.longitude.toFixed(2)}°. Gap: ${(d / 1000).toFixed(1)} km.`,
+      }, 'lost-contact', dispatch)
     }
 
     this.prevPositions.set(asset.id, { lat: asset.latitude, lon: asset.longitude })
@@ -232,26 +199,23 @@ export class AlertManager {
     if (Math.random() > 0.008 || !this.canFire('orbital-anomaly', asset.id, now)) return
 
     const anomalies = [
-      'unexpected attitude adjustment detected',
-      'thermal fluctuation in panel array',
-      'orbital decay rate above nominal',
+      'attitude adjustment',
+      'thermal fluctuation',
+      'orbital decay rate deviation',
       'reaction wheel RPM spike',
       'star tracker interference',
     ]
-    const detail = pick(anomalies)
+    const detail = anomalies[Math.floor(Math.random() * anomalies.length)]
 
-    this.dispatchAlert(
-      asset,
-      'high',
-      `Orbital Anomaly — ${asset.name}`,
-      `${asset.name}: ${detail}. Diagnostics requested.`,
-      'report',
-      `Orbital Anomaly: ${asset.name}`,
-      `Satellite ${asset.name} (NORAD ${asset.noradId}): ${detail}. Ground control notified.`,
-      'high',
-      'orbital-anomaly',
-      dispatch,
-    )
+    this.dispatch(asset, 'high', {
+      type: 'report',
+      title: `Orbital event: ${asset.name}`,
+      body: `${asset.name} (NORAD ${asset.noradId}): ${detail}. Altitude ${(asset.altitude / 1000).toFixed(0)} km, inclination ${asset.inclination.toFixed(1)}°.`,
+    }, 'orbital-anomaly', dispatch)
+  }
+
+  getSignalStrength(assetId: string): number {
+    return this.signalStrengths.get(assetId) ?? 100
   }
 }
 

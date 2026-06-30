@@ -1,3 +1,4 @@
+import type React from 'react'
 import { motion } from 'framer-motion'
 import type { Asset, Satellite, Aircraft } from '@/types'
 import { Gauge, Navigation, Shield, Zap } from 'lucide-react'
@@ -75,7 +76,7 @@ export function AssetHoverCard({ asset, x, y }: Props) {
   )
 }
 
-function StatItem({ icon: Icon, label, value }: { icon: any, label: string, value: string }) {
+function StatItem({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>, label: string, value: string }) {
   return (
     <div className="bg-card p-2.5">
       <div className="flex items-center gap-1.5 mb-0.5">

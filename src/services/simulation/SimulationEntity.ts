@@ -1,9 +1,7 @@
 import type { Asset } from '@/types'
+import { DEG2RAD, RAD2DEG, EARTH_RADIUS } from '@/lib/constants'
 import type { Waypoint } from './types'
 
-const DEG2RAD = Math.PI / 180
-const RAD2DEG = 180 / Math.PI
-const EARTH_RADIUS = 6371000
 
 export abstract class SimulationEntity {
   id: string

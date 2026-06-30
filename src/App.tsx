@@ -9,6 +9,7 @@ import GlobeViewer from '@/globe/GlobeViewer'
 import { ResizableSidebar } from '@/components/ResizableSidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useSimulation } from '@/hooks/useSimulation'
+import { useEngine } from '@/hooks/useEngine'
 import { useAppStore } from '@/store'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
@@ -16,7 +17,7 @@ function CompactBar({
   icons,
   side,
 }: {
-  icons: { icon: any; label: string; onClick: () => void; isActive?: boolean }[]
+  icons: { icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; isActive?: boolean }[]
   side: 'left' | 'right'
 }) {
   const setMode = useAppStore(
@@ -72,6 +73,7 @@ function ChevronIcon({ side }: { side: 'left' | 'right' }) {
 
 function App() {
   useSimulation()
+  useEngine()
 
   const mainRef = useRef<HTMLElement>(null)
   const resizeTimerRef = useRef<number | null>(null)
@@ -103,7 +105,7 @@ function App() {
         }
         resizeTimerRef.current = requestAnimationFrame(() => {
           resizeTimerRef.current = null
-          const viewer = (globalThis as any).__cesiumViewer
+          const viewer = window.__cesiumViewer
           if (viewer && typeof viewer.resize === 'function') {
             viewer.resize()
           }

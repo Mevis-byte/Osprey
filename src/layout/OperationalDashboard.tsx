@@ -1,3 +1,4 @@
+import type React from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/store'
 import { Shield, Globe, Satellite, Plane, Ship, AlertTriangle } from 'lucide-react'
@@ -98,7 +99,7 @@ export function OperationalDashboard() {
   )
 }
 
-function SummaryCard({ icon: Icon, label, value, trend, color = "text-foreground" }: any) {
+function SummaryCard({ icon: Icon, label, value, trend, color = "text-foreground" }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; trend?: string; color?: string }) {
   return (
     <div className="rounded-sm border border-white/5 bg-white/5 p-3">
       <div className="flex items-center gap-2 mb-1.5">
@@ -113,7 +114,7 @@ function SummaryCard({ icon: Icon, label, value, trend, color = "text-foreground
   )
 }
 
-function CountCard({ icon: Icon, label, count, color }: any) {
+function CountCard({ icon: Icon, label, count, color }: { icon: React.ComponentType<{ className?: string }>; label: string; count: number; color?: string }) {
   return (
     <div className="rounded-sm border border-white/5 bg-white/5 p-2.5 text-center">
       <Icon className={`mx-auto mb-1 h-3.5 w-3.5 ${color}`} />

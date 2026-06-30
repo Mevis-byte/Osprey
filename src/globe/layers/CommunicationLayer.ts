@@ -9,6 +9,11 @@ import { ThemeColor } from './theme-colors'
 const LINK_COLOR = ThemeColor.success
 const LINK_SELECTED_COLOR = ThemeColor.primary
 
+const SCRATCH_STATION = new Cesium.Cartesian3()
+const SCRATCH_SATELLITE = new Cesium.Cartesian3()
+const SCRATCH_MID = new Cesium.Cartesian3()
+const POSITIONS_OUT: Cesium.Cartesian3[] = [SCRATCH_STATION, SCRATCH_MID, SCRATCH_SATELLITE]
+
 function findSatellite(assetId: string): Asset | undefined {
   return useAppStore.getState().assetData.find((asset) => asset.id === assetId)
 }
@@ -33,36 +38,30 @@ export class CommunicationLayer extends BaseLayer {
               const asset = findSatellite(satelliteId)
               if (!asset) return []
 
-              const stationPos = Cesium.Cartesian3.fromDegrees(
-                station.longitude,
-                station.latitude,
-                station.altitude,
+              Cesium.Cartesian3.fromDegrees(
+                station.longitude, station.latitude, station.altitude,
+                Cesium.Ellipsoid.WGS84, SCRATCH_STATION,
               )
-              const satellitePos = Cesium.Cartesian3.fromDegrees(
-                asset.longitude,
-                asset.latitude,
-                asset.altitude,
+              Cesium.Cartesian3.fromDegrees(
+                asset.longitude, asset.latitude, asset.altitude,
+                Cesium.Ellipsoid.WGS84, SCRATCH_SATELLITE,
               )
-              const mid = Cesium.Cartesian3.midpoint(
-                stationPos,
-                satellitePos,
-                new Cesium.Cartesian3(),
-              )
-              mid.z += Math.max(asset.altitude * 0.18, 1000000)
-              return [stationPos, mid, satellitePos]
+              Cesium.Cartesian3.midpoint(SCRATCH_STATION, SCRATCH_SATELLITE, SCRATCH_MID)
+              SCRATCH_MID.z += Math.max(asset.altitude * 0.18, 1000000)
+              return POSITIONS_OUT
             }, false),
             width: new Cesium.CallbackProperty(() => {
               return this.isPathActive(station.id, satelliteId) ? 1.5 : 1
             }, false),
-              material: new Cesium.PolylineDashMaterialProperty({
-                color: new Cesium.CallbackProperty(() => {
-                  const isSelected = this.isPathActive(station.id, satelliteId)
-                  const baseColor = isSelected ? LINK_SELECTED_COLOR : LINK_COLOR
-                  return baseColor.withAlpha(isSelected ? 0.7 : 0.18)
-                }, false),
-                dashLength: 12,
-                dashPattern: 255,
-              }),
+            material: new Cesium.PolylineDashMaterialProperty({
+              color: new Cesium.CallbackProperty(() => {
+                const isSelected = this.isPathActive(station.id, satelliteId)
+                const baseColor = isSelected ? LINK_SELECTED_COLOR : LINK_COLOR
+                return baseColor.withAlpha(isSelected ? 0.7 : 0.18)
+              }, false),
+              dashLength: 12,
+              dashPattern: 255,
+            }),
           },
           show: true,
         })

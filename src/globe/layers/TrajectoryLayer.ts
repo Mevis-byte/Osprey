@@ -1,10 +1,10 @@
 import * as Cesium from 'cesium'
+import { EARTH_RADIUS } from '@/lib/constants'
 import { BaseLayer } from './BaseLayer'
 import { useAppStore } from '@/store'
 import type { Asset } from '@/types'
 import { ThemeColor } from './theme-colors'
 
-const EARTH_R = 6371000
 const PREDICTION_MARKS = [5, 15, 30, 60] as const
 const SEGMENT_COLORS = [
   ThemeColor.primary,
@@ -23,7 +23,7 @@ function predict(
   headingDeg: number, speedMs: number, minutes: number,
 ): { lat: number; lon: number; alt: number } {
   const dist = speedMs * minutes * 60
-  const angular = dist / (EARTH_R + alt)
+  const angular = dist / (EARTH_RADIUS + alt)
   const hdg = toRad(headingDeg)
   const lat1 = toRad(lat)
   const lon1 = toRad(lon)
@@ -123,11 +123,16 @@ export class TrajectoryLayer extends BaseLayer {
       const currPos = Cesium.Cartesian3.fromDegrees(pos.lon, pos.lat, pos.alt, Cesium.Ellipsoid.WGS84, SCRATCH_CURR)
 
       const segment = this.segmentEntities[i]
-      segment.polyline!.positions = [prevPos.clone(), currPos.clone()] as unknown as Cesium.Property
+      segment.polyline!.positions = [Cesium.Cartesian3.clone(prevPos), Cesium.Cartesian3.clone(currPos)] as unknown as Cesium.Property
       segment.show = true
 
       const waypoint = this.waypointEntities[i]
-      waypoint.position = new Cesium.ConstantPositionProperty(currPos.clone())
+      const wpPos = Cesium.Cartesian3.clone(currPos)
+      if (waypoint.position instanceof Cesium.ConstantPositionProperty) {
+        waypoint.position.setValue(wpPos)
+      } else {
+        waypoint.position = new Cesium.ConstantPositionProperty(wpPos)
+      }
       waypoint.show = true
     }
   }

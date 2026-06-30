@@ -1,10 +1,8 @@
 import * as Cesium from 'cesium'
+import { DEG2RAD, RAD2DEG } from '@/lib/constants'
 import { useAppStore } from '@/store'
 import type { Satellite } from '@/types'
 import { ThemeColor } from '@/globe/layers/theme-colors'
-
-const DEG2RAD = Math.PI / 180
-const RAD2DEG = 180 / Math.PI
 const EARTH_RATE = 7.2921159e-5
 const NUM_POINTS = 360
 const HALF_POINTS = NUM_POINTS / 2

@@ -8,11 +8,11 @@ const EVENT_LIFETIME_MS = 10000
 const FADE_IN_MS = 400
 const FADE_OUT_MS = 600
 
-const SEVERITY_COLORS: Record<string, string> = {
-  low: '#22c55e',
-  medium: '#eab308',
-  high: '#f97316',
-  critical: '#ef4444',
+const SEVERITY_COLORS: Record<string, Cesium.Color> = {
+  low: Cesium.Color.fromCssColorString('#22c55e'),
+  medium: Cesium.Color.fromCssColorString('#eab308'),
+  high: Cesium.Color.fromCssColorString('#f97316'),
+  critical: Cesium.Color.fromCssColorString('#ef4444'),
 }
 
 const EVENT_LABEL: Record<string, string> = {
@@ -22,6 +22,8 @@ const EVENT_LABEL: Record<string, string> = {
   report: 'Mission Started',
   alert: 'Alert Triggered',
 }
+
+const SCRATCH_POS = new Cesium.Cartesian3()
 
 interface ActiveMarker {
   id: string
@@ -56,11 +58,11 @@ export class EventMarkerLayer extends BaseLayer {
     const store = useAppStore.getState()
 
     for (const ev of store.feedData) {
-      this.ingestEvent(ev, now, store)
+      this.ingestEvent(ev, now)
     }
 
     for (const alert of store.alerts) {
-      this.ingestAlert(alert, now, store)
+      this.ingestAlert(alert, now)
     }
 
     const pruneBefore = now - SEEN_IDS_RETENTION_MS
@@ -77,16 +79,15 @@ export class EventMarkerLayer extends BaseLayer {
         continue
       }
 
-      this.updateMarker(m, age, now)
+      this.updateMarker(m, age)
     }
   }
 
-  private ingestEvent(ev: FeedEvent, now: number, _store: any): void {
+  private ingestEvent(ev: FeedEvent, now: number): void {
     if (this.seenTimestamps.has(ev.id)) return
     this.seenTimestamps.set(ev.id, now)
 
-    const store = useAppStore.getState()
-    const asset = this.findAsset(ev.assetIds, store)
+    const asset = this.findAsset(ev.assetIds)
     if (!asset) return
 
     const severity = ev.severity
@@ -95,20 +96,21 @@ export class EventMarkerLayer extends BaseLayer {
     this.spawnMarker(`event-${ev.id}`, asset, severity, title, now)
   }
 
-  private ingestAlert(alert: Alert, now: number, store: any): void {
+  private ingestAlert(alert: Alert, now: number): void {
     const markerId = `alert-${alert.id}`
     if (this.seenTimestamps.has(markerId)) return
     this.seenTimestamps.set(markerId, now)
 
-    const asset = this.findAsset(alert.assetIds, store)
+    const asset = this.findAsset(alert.assetIds)
     if (!asset) return
 
     this.spawnMarker(markerId, asset, alert.severity, alert.title, now)
   }
 
-  private findAsset(assetIds: string[], store: any): Asset | undefined {
+  private findAsset(assetIds: string[]): Asset | undefined {
+    const assets = useAppStore.getState().assetData
     for (const id of assetIds) {
-      const a = store.assetData.find((x: Asset) => x.id === id)
+      const a = assets.find((x: Asset) => x.id === id)
       if (a) return a
     }
     return undefined
@@ -121,12 +123,15 @@ export class EventMarkerLayer extends BaseLayer {
     title: string,
     now: number,
   ): void {
-    const color = Cesium.Color.fromCssColorString(SEVERITY_COLORS[severity] ?? '#6b7280')
-    const pos = Cesium.Cartesian3.fromDegrees(asset.longitude, asset.latitude, asset.altitude)
+    const color = SEVERITY_COLORS[severity] ?? Cesium.Color.GRAY
+    Cesium.Cartesian3.fromDegrees(
+      asset.longitude, asset.latitude, asset.altitude,
+      Cesium.Ellipsoid.WGS84, SCRATCH_POS,
+    )
 
     const point = this.viewer.entities.add({
       id: entityId,
-      position: pos,
+      position: Cesium.Cartesian3.clone(SCRATCH_POS),
       point: {
         pixelSize: 0,
         color: color,
@@ -137,7 +142,7 @@ export class EventMarkerLayer extends BaseLayer {
     })
 
     const label = this.viewer.entities.add({
-      position: pos,
+      position: Cesium.Cartesian3.clone(SCRATCH_POS),
       label: this.createLabel(title, {
         fillColor: color,
         horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
@@ -148,7 +153,7 @@ export class EventMarkerLayer extends BaseLayer {
     })
 
     const ring = this.viewer.entities.add({
-      position: pos,
+      position: Cesium.Cartesian3.clone(SCRATCH_POS),
       ellipse: {
         semiMinorAxis: 1500,
         semiMajorAxis: 1500,
@@ -173,28 +178,26 @@ export class EventMarkerLayer extends BaseLayer {
     })
   }
 
-  private updateMarker(m: ActiveMarker, age: number, _now: number): void {
+  private updateMarker(m: ActiveMarker, age: number): void {
     const remaining = EVENT_LIFETIME_MS - age
+    const ps = m.point.point!
 
     if (age < FADE_IN_MS) {
       const t = age / FADE_IN_MS
       const ease = 1 - (1 - t) ** 2
-      m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 8)
+      ps.pixelSize = new Cesium.ConstantProperty(ease * 8)
       m.label.label!.showBackground = new Cesium.ConstantProperty(true)
-      const bg = Cesium.Color.fromCssColorString('#0a0c12').withAlpha(0.65 * ease)
-      m.label.label!.backgroundColor = bg as unknown as Cesium.Property
-    }
- else if (remaining < FADE_OUT_MS) {
+    } else if (remaining < FADE_OUT_MS) {
       const t = remaining / FADE_OUT_MS
       const ease = t * t
-      m.point.point!.pixelSize = new Cesium.ConstantProperty(ease * 8)
+      ps.pixelSize = new Cesium.ConstantProperty(ease * 8)
       if (ease < 0.05) {
         m.point.show = false
         m.label.show = false
         m.ring.show = false
       }
     } else {
-      m.point.point!.pixelSize = new Cesium.ConstantProperty(8)
+      ps.pixelSize = new Cesium.ConstantProperty(8)
     }
   }
 

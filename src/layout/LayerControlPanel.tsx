@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useAppStore } from '@/store'
 import type { LayerVisibility } from '@/store/app-store'
 import { 
@@ -16,7 +17,7 @@ import {
   Shield
 } from 'lucide-react'
 
-const LAYER_CONFIG: { key: keyof LayerVisibility; label: string; icon: any }[] = [
+const LAYER_CONFIG: { key: keyof LayerVisibility; label: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }[] = [
   { key: 'satellites', label: 'Satellites', icon: Satellite },
   { key: 'aircraft', label: 'Aircraft', icon: Plane },
   { key: 'maritime', label: 'Maritime', icon: Ship },

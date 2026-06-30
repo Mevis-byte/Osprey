@@ -22,7 +22,7 @@ const sigmaSettings = {
   nodesPowRatio: 0.5,
 }
 
-function randomPositions(g: any): void {
+function randomPositions(g: import("graphology").default): void {
   g.forEachNode((node: string) => {
     if (g.getNodeAttribute(node, 'x') === undefined) {
       g.setNodeAttribute(node, 'x', (Math.random() - 0.5) * 200)

@@ -1,8 +1,9 @@
+import type React from 'react'
 import { Globe, Map, Satellite, BarChart3 } from 'lucide-react'
 import { useAppStore } from '@/store'
 import type { ProjectionMode } from '@/types'
 
-const MODES: { key: ProjectionMode; label: string; shortLabel: string; icon: any }[] = [
+const MODES: { key: ProjectionMode; label: string; shortLabel: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: 'globe', label: 'Globe Mode', shortLabel: 'Globe', icon: Globe },
   { key: 'flat', label: 'Flat Mode', shortLabel: 'Flat', icon: Map },
   { key: 'space', label: 'Space Mode', shortLabel: 'Space', icon: Satellite },

@@ -1,6 +1,6 @@
 import type { Aircraft } from '@/types'
 
-export const aircraft: Aircraft[] = [
+export const aircraft = [
   {
     id: 'AC-001',
     name: 'E-3 Sentry',
@@ -164,4 +164,4 @@ export const aircraft: Aircraft[] = [
     fuelLevel: 0.88,
     pilot: '1st Lt. Yamamoto',
   },
-]
+] as Aircraft[]

@@ -1,8 +1,8 @@
 import * as Cesium from 'cesium'
+import { EARTH_RADIUS } from '@/lib/constants'
 import { useAppStore } from '@/store'
 import { ThemeColor } from '@/globe/layers/theme-colors'
 
-const EARTH_RADIUS = 6371000
 const GRID_COLOR = ThemeColor.success
 const NUM_SEGMENTS = 60
 const UPDATE_THRESHOLD = 0.02

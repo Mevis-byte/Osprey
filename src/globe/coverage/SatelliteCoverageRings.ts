@@ -1,8 +1,8 @@
 import * as Cesium from 'cesium'
+import { EARTH_RADIUS } from '@/lib/constants'
 import { useAppStore } from '@/store'
 import { ThemeColor } from '@/globe/layers/theme-colors'
 
-const EARTH_RADIUS = 6371000
 
 const RING_CONFIGS = [
   { pct: 0.25, alpha: 0.20 },

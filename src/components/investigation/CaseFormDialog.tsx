@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useCaseStore } from '@/store/case-store'
-import type { CasePriority, InvestigationCase } from '@/types'
+import type { CasePriority, CaseStatus, InvestigationCase } from '@/types'
 
 interface CaseFormDialogProps {
   open: boolean
@@ -121,7 +121,7 @@ export function CaseFormDialog({ open, onClose, editCase }: CaseFormDialogProps)
                   <label className="mb-1 block text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Status</label>
                   <select
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
+                    onChange={(e) => setStatus(e.target.value as CaseStatus)}
                     className="w-full rounded-[2px] border border-border/60 bg-background px-2.5 py-1.5 text-[11px] text-foreground focus:outline-none"
                   >
                     <option value="open">Open</option>

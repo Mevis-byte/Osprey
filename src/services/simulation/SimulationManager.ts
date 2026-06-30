@@ -5,7 +5,7 @@ import { AircraftEntity } from './AircraftEntity'
 import { MaritimeEntity } from './MaritimeEntity'
 import { SatelliteEntity } from './SatelliteEntity'
 import { HistoryTracker } from './HistoryTracker'
-import type { HistoryPoint } from './HistoryTracker'
+import type { HistoryPoint } from './types'
 import { aircraftRoutes, maritimeRoutes } from './routes'
 import { CelesTrakService } from '../CelesTrakService'
 

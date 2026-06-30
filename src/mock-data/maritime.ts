@@ -1,6 +1,6 @@
 import type { MaritimeAsset } from '@/types'
 
-export const maritime: MaritimeAsset[] = [
+export const maritime = [
   {
     id: 'MV-001',
     name: 'USS Abraham Lincoln',
@@ -181,4 +181,4 @@ export const maritime: MaritimeAsset[] = [
     length: 399.9,
     beam: 58.8,
   },
-]
+] as MaritimeAsset[]

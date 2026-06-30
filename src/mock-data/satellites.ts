@@ -1,6 +1,6 @@
 import type { Satellite } from '@/types'
 
-export const satellites: Satellite[] = [
+export const satellites = [
   {
     id: 'SAT-ISS',
     name: 'ISS (ZARYA)',
@@ -127,4 +127,4 @@ export const satellites: Satellite[] = [
   { id: 'SAT-GLO-1', name: 'GLONASS-K1', type: 'satellite', latitude: 55.0, longitude: 37.0, altitude: 19130000, speed: 13500, heading: 90, status: 'active', lastUpdated: '2026-06-15T08:23:00Z', noradId: '63001', inclination: 64.8, apogee: 19200000, perigee: 19000000, period: 675.0, launchDate: '2022-11-01' },
   { id: 'SAT-GLO-2', name: 'GLONASS-K2', type: 'satellite', latitude: -30.0, longitude: 80.0, altitude: 19130000, speed: 13500, heading: 90, status: 'active', lastUpdated: '2026-06-15T08:22:30Z', noradId: '63002', inclination: 64.8, apogee: 19200000, perigee: 19000000, period: 675.0, launchDate: '2023-03-15' },
   { id: 'SAT-GLO-3', name: 'GLONASS-K3', type: 'satellite', latitude: 10.0, longitude: -140.0, altitude: 19130000, speed: 13500, heading: 90, status: 'maintenance', lastUpdated: '2026-06-15T08:22:00Z', noradId: '63003', inclination: 64.8, apogee: 19200000, perigee: 19000000, period: 675.0, launchDate: '2024-06-20' },
-]
+] as Satellite[]

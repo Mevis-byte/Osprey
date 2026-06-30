@@ -35,6 +35,16 @@ export type MissionStatus =
   | 'standby'
   | 'cancelled'
 
+export type DataQuality = 'live' | 'cached' | 'simulated' | 'fallback'
+
+export interface DataSourceInfo {
+  source: string
+  lastUpdated: string
+  refreshRate: string
+  confidence: number
+  dataQuality: DataQuality
+}
+
 export interface Coordinates {
   latitude: number
   longitude: number
@@ -51,6 +61,7 @@ interface AssetBase {
   heading: number
   status: AssetStatus
   lastUpdated: string
+  dataSource: DataSourceInfo
 }
 
 export interface Aircraft extends AssetBase {
@@ -95,6 +106,7 @@ export interface GroundStation {
   altitude: number
   status: GroundStationStatus
   lastUpdated: string
+  dataSource: DataSourceInfo
   coverageRadiusKm: number
   connectedSatelliteIds: string[]
   country: string

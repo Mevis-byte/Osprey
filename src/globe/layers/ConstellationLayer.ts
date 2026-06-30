@@ -1,9 +1,9 @@
 import * as Cesium from 'cesium'
+import { EARTH_RADIUS } from '@/lib/constants'
 import { BaseLayer } from './BaseLayer'
 import { useAppStore } from '@/store'
 import type { Asset, ConstellationInfo } from '@/types'
 
-const EARTH_RADIUS = 6371000
 
 function toRad(deg: number): number {
   return (deg * Math.PI) / 180

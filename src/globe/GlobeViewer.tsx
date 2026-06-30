@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { EARTH_RADIUS } from '@/lib/constants'
 import * as Cesium from 'cesium'
 import { AnimatePresence } from 'framer-motion'
 import { allAssets, missions, groundStations } from '@/mock-data'
@@ -146,7 +147,7 @@ function GlobeViewer() {
       return
     }
 
-    const R = 6371000
+    const R = EARTH_RADIUS
     const coverageAngle = Math.acos(R / (R + asset.altitude))
     const coverageRadius = R * coverageAngle
 
@@ -222,7 +223,7 @@ function GlobeViewer() {
       creditContainer: document.createElement('div'),
     })
 
-    ;(globalThis as any).__cesiumViewer = viewer
+    window.__cesiumViewer = viewer
 
     viewer.imageryLayers.removeAll()
     viewer.imageryLayers.addImageryProvider(CARTO_DARK_PROVIDER)
@@ -458,6 +459,10 @@ function GlobeViewer() {
     viewer.scene.requestRender()
 
     return () => {
+      if (clickTimer !== null) {
+        clearTimeout(clickTimer)
+        clickTimer = null
+      }
       handler.destroy()
       trailRendererRef.current?.destroy()
       trailRendererRef.current = null
@@ -475,7 +480,7 @@ function GlobeViewer() {
       gridOverlayRef.current = null
       viewer.destroy()
       viewerRef.current = null
-      ;(globalThis as any).__cesiumViewer = null
+      window.__cesiumViewer = null
       layersRef.current = []
     }
   }, [setSelectedAsset, flyToAsset])
@@ -576,21 +581,23 @@ function GlobeViewer() {
     let smoothTarget: Cesium.Cartesian3 | null = null
     let smoothHeading = 0
     const SMOOTHING = 3.0
+    const SCRATCH_RAW = new Cesium.Cartesian3()
+    const SCRATCH_LERP = new Cesium.Cartesian3()
+    const SCRATCH_HPR = new Cesium.HeadingPitchRange()
 
     const removeListener = viewer.scene.preRender.addEventListener(() => {
       const assets = useAppStore.getState().assetData
       const asset = assets.find((a) => a.id === trackingAssetId)
       if (!asset) return
 
-      const rawTarget = Cesium.Cartesian3.fromDegrees(
-        asset.longitude,
-        asset.latitude,
-        asset.altitude * 0.4,
+      Cesium.Cartesian3.fromDegrees(
+        asset.longitude, asset.latitude, asset.altitude * 0.4,
+        Cesium.Ellipsoid.WGS84, SCRATCH_RAW,
       )
       const range = Math.max(Math.min(asset.altitude * 2.5, 3000000), 1500000)
 
       if (!smoothTarget) {
-        smoothTarget = rawTarget.clone()
+        smoothTarget = Cesium.Cartesian3.clone(SCRATCH_RAW)
         smoothHeading = asset.heading
         return
       }
@@ -598,9 +605,8 @@ function GlobeViewer() {
       const dt = 1 / 60
       const t = 1 - Math.exp(-SMOOTHING * dt)
 
-      const lerped = new Cesium.Cartesian3()
-      Cesium.Cartesian3.lerp(smoothTarget, rawTarget, t, lerped)
-      smoothTarget = lerped
+      Cesium.Cartesian3.lerp(smoothTarget, SCRATCH_RAW, t, SCRATCH_LERP)
+      Cesium.Cartesian3.clone(SCRATCH_LERP, smoothTarget)
 
       const targetHeadingRad = Cesium.Math.toRadians(asset.heading)
       const currentHeadingRad = Cesium.Math.toRadians(smoothHeading)
@@ -609,11 +615,10 @@ function GlobeViewer() {
       if (headingDiff < -Math.PI) headingDiff += 2 * Math.PI
       smoothHeading = Cesium.Math.toDegrees(currentHeadingRad + headingDiff * t)
 
-      viewer.camera.lookAt(smoothTarget, new Cesium.HeadingPitchRange(
-        Cesium.Math.toRadians(smoothHeading + 180),
-        Cesium.Math.toRadians(-35),
-        range,
-      ))
+      SCRATCH_HPR.heading = Cesium.Math.toRadians(smoothHeading + 180)
+      SCRATCH_HPR.pitch = Cesium.Math.toRadians(-35)
+      SCRATCH_HPR.range = range
+      viewer.camera.lookAt(smoothTarget, SCRATCH_HPR)
     })
 
     return () => {
