@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Plane, Ship, Satellite, Radio, Activity, Share2, Layers, Network, FileText } from 'lucide-react'
 import { useAppStore } from '@/store'
@@ -8,6 +8,8 @@ import GraphWorkspace from '@/components/graph/GraphWorkspace'
 import { LayerControlPanel } from './LayerControlPanel'
 import { OntologyPanel } from '@/components/ontology/OntologyPanel'
 import { InvestigationPanel } from '@/components/investigation/InvestigationPanel'
+
+const MAX_VISIBLE = 100
 
 type ChipKey = 'aircraft' | 'maritime' | 'satellite' | 'signals'
 
@@ -19,18 +21,30 @@ const chips: { key: ChipKey; label: string; icon: typeof Plane }[] = [
 ]
 
 function eventMatchesChip(event: FeedEvent, chip: ChipKey): boolean {
-  switch (chip) {
-    case 'aircraft':
-      return event.assetIds.some((id) => id.startsWith('AC'))
-    case 'maritime':
-      return event.assetIds.some((id) => id.startsWith('MV'))
-    case 'satellite':
-      return event.assetIds.some((id) => id.startsWith('SV'))
-    case 'signals':
-      return event.type === 'intel'
-    default:
-      return false
+  const assets = useAppStore.getState().assetData
+  const chipTypeMap: Record<ChipKey, 'satellite' | 'aircraft' | 'maritime' | 'intel'> = {
+    aircraft: 'aircraft',
+    maritime: 'maritime',
+    satellite: 'satellite',
+    signals: 'intel',
   }
+
+  const targetType = chipTypeMap[chip]
+  if (targetType === 'intel') return event.type === 'intel'
+
+  const aircraftTypes = new Set(['fixed-wing', 'rotary-wing'])
+
+  return event.assetIds.some((id) => {
+    const asset = assets.find((a) => a.id === id)
+    if (asset) {
+      if (targetType === 'aircraft') return aircraftTypes.has(asset.type)
+      return asset.type === targetType
+    }
+    if (targetType === 'satellite') return id.startsWith('SV') || id.startsWith('SAT')
+    if (targetType === 'aircraft') return id.startsWith('AC')
+    if (targetType === 'maritime') return id.startsWith('MV')
+    return false
+  })
 }
 
 const severityColors: Record<FeedEvent['severity'], string> = {
@@ -40,14 +54,12 @@ const severityColors: Record<FeedEvent['severity'], string> = {
   low: 'bg-slate-500',
 }
 
-function FeedItem({ event, index }: { event: FeedEvent; index: number }) {
+const FeedItem = memo(function FeedItem({ event }: { event: FeedEvent }) {
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -12 }}
-      transition={{ duration: 0.2, delay: index * 0.015, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
       className="group flex cursor-pointer items-start gap-2 border-l-2 border-transparent px-3 py-1.5 transition-colors hover:border-primary/30 hover:bg-accent/30"
     >
       <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-[2px] ${severityColors[event.severity]}`} />
@@ -64,14 +76,19 @@ function FeedItem({ event, index }: { event: FeedEvent; index: number }) {
         <p className="truncate text-[11px] text-foreground/90 group-hover:text-foreground">
           {event.title}
         </p>
+        {event.body && event.body !== event.title && (
+          <p className="mt-0.5 line-clamp-2 text-[10px] leading-[1.3] text-muted-foreground/60">
+            {event.body}
+          </p>
+        )}
       </div>
 
-      <span className="shrink-0 self-center text-[9px] text-muted-foreground/60">
+      <span className="shrink-0 self-start pt-1 text-[9px] text-muted-foreground/60">
         {event.severity.toUpperCase()}
       </span>
     </motion.div>
   )
-}
+})
 
 type PanelTab = 'stream' | 'intel' | 'graph' | 'layers' | 'ontology' | 'cases'
 
@@ -106,7 +123,12 @@ function LeftPanel() {
         event.source.toLowerCase().includes(query)
       )
     })
-  }, [search, activeChips])
+  }, [feed, search, activeChips])
+
+  const reversedFeed = useMemo(
+    () => filteredFeed.slice(-MAX_VISIBLE).reverse(),
+    [filteredFeed],
+  )
 
   return (
     <aside className="flex flex-col border-r border-border bg-card">
@@ -223,15 +245,15 @@ function LeftPanel() {
 
       <div className="flex-1 overflow-hidden">
         {tab === 'stream' ? (
-          <div className="h-full overflow-y-auto">
-            {filteredFeed.length === 0 ? (
+          <div className="h-full overflow-y-auto custom-scrollbar">
+            {reversedFeed.length === 0 ? (
               <p className="px-3 py-12 text-center text-[11px] text-muted-foreground/60">
                 No matching intelligence
               </p>
             ) : (
-              <AnimatePresence mode="popLayout">
-                {filteredFeed.map((event, i) => (
-                  <FeedItem key={event.id} event={event} index={i} />
+              <AnimatePresence initial={false}>
+                {reversedFeed.map((event) => (
+                  <FeedItem key={event.id} event={event} />
                 ))}
               </AnimatePresence>
             )}
@@ -257,8 +279,15 @@ function LeftPanel() {
         <div className="sticky bottom-0 border-t border-border bg-card px-3 py-1">
           <div className="flex items-center justify-between text-[10px] text-muted-foreground/60">
             <span>
-              {filteredFeed.length} / {feed.length} events
+              {reversedFeed.length > 0
+                ? `Showing ${reversedFeed.length} of ${filteredFeed.length} events`
+                : `0 events`}
             </span>
+            {filteredFeed.length > MAX_VISIBLE && (
+              <span className="text-[9px] text-muted-foreground/40">
+                +{filteredFeed.length - MAX_VISIBLE} hidden
+              </span>
+            )}
           </div>
         </div>
       )}
