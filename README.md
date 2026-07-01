@@ -15,6 +15,7 @@
 
 ![Status](https://img.shields.io/badge/STATUS-ACTIVE%20ALPHA-gold?style=flat-square&labelColor=0a0800)
 ![Stack](https://img.shields.io/badge/STACK-React%20%7C%20CesiumJS%20%7C%20TypeScript-gold?style=flat-square&labelColor=0a0800)
+![Build](https://img.shields.io/badge/BUILD-PASSING%20(0%20errors)-success?style=flat-square&labelColor=0a0800)
 ![License](https://img.shields.io/badge/LICENSE-MIT-gold?style=flat-square&labelColor=0a0800)
 
 </div>
@@ -23,9 +24,9 @@
 
 ## MISSION BRIEF
 
-OSPREY transforms raw geospatial data into a unified 3D operational environment. It tracks and visualizes global multi-domain activity — satellites, aircraft, maritime vessels, ground stations, and [...]
+OSPREY transforms raw geospatial data into a unified 3D operational environment. It tracks and visualizes global multi-domain activity — satellites, aircraft, maritime vessels, ground stations, and tactical infrastructure — through an event-driven intelligence engine paired with a CesiumJS globe.
 
-Designed around the principles of defense-grade GEOINT platforms: every pixel communicates operational meaning, every layer earns its presence.
+Every pixel communicates operational meaning. Every data source is traced (live / cached / simulated / fallback). Every event derives from real system activity — TLE fetches, simulation ticks, sensor readings — never from fictional narratives.
 
 ---
 
@@ -61,45 +62,66 @@ Designed around the principles of defense-grade GEOINT platforms: every pixel co
 
 ---
 
-## DOMAINS COVERED
-
-| Domain | Status | Data Source |
-|---|---|---|
-| 🛰 **Satellite** | Live | CelesTrak TLE |
-| ✈ **Aircraft** | Integration-ready | OpenSky Network |
-| 🚢 **Maritime** | Architecture ready | AISStream (planned) |
-| 🌐 **Ground Stations** | Live | Static + configurable |
-| ⚡ **Comm Links** | Live | Internal simulation |
-| ⚠ **Global Events** | Live | USGS + expandable |
-
----
-
 ## SYSTEM ARCHITECTURE
 
 ```
-OSPREY
-│
-├── 🌍  Globe Engine (CesiumJS)
-│       ├── Satellite Layer          ← TLE-based orbital propagation
-│       ├── Aircraft Layer           ← OpenSky integration
-│       ├── Maritime Layer           ← AIS-ready
-│       ├── Coverage & Sensor Layer  ← Rings, cones, ground projections
-│       ├── Communication Layer      ← Tactical link networks
-│       └── Tactical Grid Overlay
-│
-├── ⚙️  State Management (Zustand)
-│
-├── 📡  Data Services
-│       ├── CelesTrak Service        ← Satellite TLE feeds
-│       ├── OpenSky Service          ← Live aircraft positioning
-│       ├── AIS Service              ← Maritime (planned)
-│       └── Event Stream Service     ← Global intelligence feed
-│
-└── 🖥️  UI Layer (React + Tailwind)
-        ├── Intelligence Stream Panel
-        ├── Asset Detail Panel
-        ├── Layer Controls
-        └── Timeline + Playback System
+                         ┌─────────────────────────────────┐
+                         │         OSPREY ENGINE            │
+                         │  (src/engine/)                   │
+                         │                                  │
+  CelesTrak ───► CelesTrakProvider ──┐                      │
+  OpenSky  ───► OpenSkyGateway   ───┤   ┌──────────────┐   │
+  SimEngine ──► SimulationProvider ──┼──►│ EntityRepo   │   │
+  AISStream ──► [planned]        ───┘   │ (unified     │   │
+                                         │  store)      │   │
+                              EventBus ◄─┤              │   │
+                              ▲         │              │   │
+                         ┌────┴────┐   └──────┬───────┘   │
+                         │  Correlation        │           │
+                         │  Engine             │           │
+                         │  (4 rules)          │           │
+                         └─────────┘           ▼           │
+                                        Analytics Engine   │
+                                   (speed/heading/anomaly) │
+                         ┌─────────────────────────────────┘
+                         │
+                         ▼
+                    ┌──────────┐     ┌──────────────────┐
+                    │  Zustand │────►│  CesiumJS Globe   │
+                    │  Stores  │     │  (resium layers)  │
+                    └──────────┘     └──────────────────┘
+                                           │
+                                    ┌──────┴──────┐
+                                    │ 8+ Cesium   │
+                                    │  Layers     │
+                                    │ (pre-created│
+                                    │  entities)  │
+                                    └─────────────┘
+```
+
+## ENGINE MODULES
+
+```
+src/engine/
+├── core/
+│   ├── types.ts          ─ EntityBase, EventType, DataProvider interface
+│   ├── event-bus.ts      ─ Typed pub/sub with filtering by type/source/region
+│   └── entity-repo.ts    ─ Unified in-memory store with spatial queries
+├── providers/
+│   ├── interface.ts      ─ ProviderRegistry + BaseProvider lifecycle
+│   ├── celes-trak.ts     ─ TLE provider (4 groups, per-group status, fallback ISS)
+│   └── simulation.ts     ─ Wraps legacy SimulationManager as DataProvider
+├── normalization/
+│   └── normalizers.ts    ─ TLE→Entity, AIS→Entity, ADS-B→Entity converters
+├── spatial/
+│   └── index.ts          ─ Great-circle, coverage, orbital math, signal latency
+├── correlation/
+│   └── index.ts          ─ 4 cross-domain rules (proximity, geofence, weather, coverage)
+├── analytics/
+│   └── index.ts          ─ Speed anomaly, heading change, contact gap, stationary detection
+├── gateway/
+│   └── index.ts          ─ BaseGateway + OpenSky live ADS-B gateway
+└── index.ts              ─ createEngine(), setSimulationAssets(), destroyEngine()
 ```
 
 ---
@@ -107,35 +129,110 @@ OSPREY
 ## FEATURE SET
 
 ### 🌍 3D Globe Interface
-Real-time Earth rendering powered by CesiumJS. Zoom-adaptive data scaling, multi-layer operational overlays, and click-to-select asset panels give full command-center interactivity without UI noise.
+CesiumJS globe powered by **resium**. Zoom-adaptive multi-layer overlays with click-to-select asset panels. Every Cesium entity pre-created and toggled via `show` — zero destroy+recreate cycles.
 
 ### 📡 Multi-Domain Tracking
-- **Satellite orbits** — TLE propagation via CelesTrak with coverage ring and sensor cone visualization
-- **Aircraft** — Live positioning via OpenSky Network (integration-ready)
-- **Maritime vessels** — AIS-compatible architecture, ready for AISStream
-- **Ground networks** — Configurable station mesh with communication link rendering
+- **Satellites** — TLE propagation via CelesTrak (stations, Starlink, GPS, Galileo). Coverage rings, sensor cones (unit- cone + modelMatrix scaling), ground track, trajectory & constellation layers
+- **Aircraft** — Live-ready OpenSky ADS-B gateway; simulated fixed-wing + rotary-wing with color-coded markers (green/blue/amber)
+- **Maritime** — AIS-ready architecture; vessels with heading-rotated markers
+- **Ground Stations** — Configurable station mesh with communication link rendering
+- **Geofences** — 10 strategic zones with concentric rings, radial spokes, cardinal markers, distance labels
 
-### ⚡ Intelligence Stream
-An event-driven operational feed that surfaces aircraft detections, satellite passes, system alerts, and environmental events in real time. Expandable to any WebSocket or REST data source.
+### ⚡ Event-Driven Intelligence Pipeline
+
+```
+System Activity ──► AlertManager ──► FeedEvent + Alert
+                              │
+                              ▼
+                   Engine Analytics ──► Correlation Events
+                              │
+                              ▼
+                   Zustand Store ──► UI Feed Stream
+```
+
+All events derive from actual system conditions:
+- Signal level drops
+- Speed anomalies (vs sustained average)
+- Heading changes >45°
+- Contact gaps >60s
+- Stationary vessel detection
+- Orbital altitude/inclination changes
+- TLE fetch status per group
 
 ### 🎯 Asset Intelligence Cards
-Hover any tracked asset for an immediate intelligence card: position, velocity, altitude, status, active network links. Full detail panel on select.
+Hover any tracked asset for immediate intelligence card: position, velocity, altitude, status, active network links, **data source info** (quality, confidence, last updated, refresh rate).
 
 ### 🕐 Timeline System
-Scrubable playback with time scaling (1× to 8×). Replay historical event sequences or run simulated scenarios forward.
+Scrubable playback with time scaling (1×–64×). Replay historical sequences or run simulated scenarios forward.
+
+### 🛡️ Geofencing & Tactical Overlays
+10 concentric zone rings per geofence (red/orange/yellow/green), radial spokes, cardinal markers (N/E/S/W), per-ring distance labels, geodesic circle computation using local ENU frame and WGS84 ellipsoid.
+
+### 🔗 Communication Network Visualization
+Pre-allocated link entities between ground stations and satellites. Animated data flow (dashed polylines with material). Zero-allocation CallbackProperty with module-level scratch objects.
 
 ---
 
-## TECH STACK
+## DATA TRANSPARENCY
 
-| Layer | Technology |
+Every tracked asset carries a `DataSourceInfo` record:
+
+| Field | Purpose |
 |---|---|
-| Frontend | React + TypeScript |
-| 3D Engine | CesiumJS |
-| State | Zustand |
-| Build | Vite |
-| Styling | TailwindCSS |
-| Data | REST + WebSocket (planned) |
+| `source` | Provider name (e.g. "CelesTrak", "OSPREY Simulation Engine") |
+| `lastUpdated` | Timestamp of last position refresh |
+| `refreshRate` | Expected interval between updates |
+| `quality` | `live` / `cached` / `simulated` / `fallback` |
+| `confidence` | 0–1 confidence score in reported position |
+
+---
+
+## PERFORMANCE ARCHITECTURE
+
+| Technique | Location |
+|---|---|
+| Entity pre-creation (never add/remove) | All globe layers |
+| Unit cone + modelMatrix scaling | SatelliteCoverageRings, SensorConeLayer |
+| Module-level scratch Cartesian3 objects | CommunicationLayer, GlobeViewer tracking |
+| Module-level Color constants (parsed once) | EventMarkerLayer |
+| Canvas + ImageMaterialProperty reuse | HeatmapLayer |
+| ConstantPositionProperty.setValue() | TrajectoryLayer |
+| 8 pre-created trajectory entities | TrajectoryLayer |
+| 60s TTL pruning on seenIds | EventMarkerLayer |
+| FIFO cap at 200 entries | feedData, alerts in Zustand |
+
+### Memory Targets
+
+| Metric | Status | Target |
+|---|---|---|
+| Baseline footprint | ~200 MB | <400 MB |
+| Max visible entities | 500+ | 500+ |
+| Cesium entity reuse | ✅ Enforced | Active |
+| React re-renders | Selective subscriptions | Minimized |
+
+---
+
+## DATA SOURCES
+
+| Feed | Provider | Status | Quality |
+|---|---|---|---|
+| Satellite TLEs | CelesTrak | ✅ Active, 4 groups, 403-tolerant | `cached` |
+| Aircraft positions | OpenSky Network | 🔧 Gateway implemented | `live` |
+| Simulated assets | OSPREY Engine | ✅ Active (82 assets) | `simulated` |
+| Maritime AIS | AISStream | 📋 Planned | — |
+| Seismic events | USGS | 📋 Planned | — |
+| Weather | OpenWeather | 📋 Planned | — |
+
+---
+
+## CODE QUALITY
+
+- **TypeScript** — `strict: true`, zero `any` types, 0 build errors (~1998 modules)
+- **Build** — `npm run build` passes with 0 warnings
+- **Cesium API** — all entity properties verified against actual API surface (no ghost properties like `dashOffset`)
+- **Event safety** — all `movement.position` and `scene.canvas` accesses guarded
+- **Cleanup** — all intervals, resize observers, animation frames, event subscriptions cleared on unmount
+- **Architecture docs** — ARCHITECTURE.md, DESIGN_DECISIONS.md, DATA_PIPELINE.md
 
 ---
 
@@ -156,62 +253,50 @@ npm run dev
 npm run build
 ```
 
+No API keys required for development — all core features work with simulated data and the public CelesTrak API.
+
 ---
 
 ## DEVELOPMENT ROADMAP
 
-### Phase 1 — Live Data Integration
-- [x] CesiumJS globe engine
-- [x] Satellite visualization (simulated)
-- [x] Intelligence stream architecture
-- [ ] OpenSky live aircraft tracking
-- [ ] CelesTrak real TLE propagation
-- [ ] USGS earthquake event stream
+### Phase 1 — Core ✅
+- [x] CesiumJS globe engine with 8+ operational layers
+- [x] Satellite visualization (TLE-based orbital propagation)
+- [x] Aircraft + maritime + ground station tracking
+- [x] Event-driven intelligence stream
+- [x] Event bus + entity repository + provider framework
+- [x] Multi-window sidebar UI (left panel, right panel, timeline)
+- [x] Geofencing system with tactical overlays
+- [x] Memory leak fixes (caps, TTL, pre-creation)
+- [x] Data transparency (per-asset source/quality/confidence)
+- [x] Architecture documentation
 
-### Phase 2 — Advanced Visualization
+### Phase 2 — Live Data & Polish
+- [ ] OpenSky live aircraft tracking (gateway implemented)
+- [ ] CelesTrak real TLE propagation (provider implemented)
+- [ ] USGS earthquake event stream
 - [ ] Day/Night terminator system
 - [ ] Atmospheric scattering effects
 - [ ] Animated communication links
-- [ ] Sensor field visualization
 
 ### Phase 3 — Intelligence Expansion
 - [ ] Mission system framework
 - [ ] Threat zone overlays
 - [ ] Predictive trajectory modeling
 - [ ] AI-assisted anomaly detection
-
----
-
-## PERFORMANCE TARGETS
-
-| Metric | Target |
-|---|---|
-| Memory footprint | < 400 MB |
-| Max visible aircraft | 500 |
-| Cesium entity reuse | Active |
-| React re-renders | Minimized via selective Zustand subscriptions |
-
----
-
-## DATA SOURCES
-
-| Feed | Provider | Docs |
-|---|---|---|
-| Satellite TLEs | CelesTrak | [celestrak.org](https://celestrak.org) |
-| Aircraft positions | OpenSky Network | [opensky-network.org](https://opensky-network.org) |
-| Seismic events | USGS | [earthquake.usgs.gov](https://earthquake.usgs.gov) |
-| Maritime AIS | AISStream | [aisstream.io](https://aisstream.io) |
-| Weather (optional) | OpenWeather | [openweathermap.org](https://openweathermap.org) |
+- [ ] Maritime AISStream integration
 
 ---
 
 ## DESIGN PHILOSOPHY
 
-**Situational awareness is the product.** Every UI element exists to communicate operational state, not to decorate the screen.
+**Situational awareness is the product.** Every UI element communicates operational state, not decoration.
 
-**Layers, not clutter.** Data density is achieved through layered visualization that the operator controls — not by forcing everything into view at once.
+**Layers, not clutter.** Data density through layered visualization under operator control — not by forcing everything into view at once.
 
-**Render at the speed of operations.** Real-time constraints are first-class requirements, not afterthoughts.
+**Render at the speed of operations.** Real-time constraints are first-class requirements. Zero-allocation-per-frame patterns in hot paths. Entity reuse over destroy+recreate.
+
+**Data provenance is non-negotiable.** Every position is tagged with source, quality, confidence, and last-updated timestamp. No unlabeled data.
 
 ---
 
@@ -228,9 +313,9 @@ OSPREY draws from the visual language and operational logic of:
 ## STATUS
 
 ```
-◉ ACTIVE DEVELOPMENT   ▸  Early Alpha
-  Core systems operational.
-  Real-world data integration and performance optimization in progress.
+◉ ACTIVE DEVELOPMENT   ▸  Alpha
+  Core engine operational. 0 build errors.
+  Live data integration and intelligence expansion in progress.
 ```
 
 ---
